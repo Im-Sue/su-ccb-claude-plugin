@@ -1,0 +1,19 @@
+name: kernel-lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  kernel-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 -m pip install pyyaml
+      - name: Run kernel lint (manifests + state + spec + dispatch)
+        run: python3 references/kernel/tools/lint_all.py
