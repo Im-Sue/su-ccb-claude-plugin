@@ -52,6 +52,64 @@ CLI 形式：
 node <plugin>/skills/su-init/scripts/init.mjs --project-root <projectRoot>
 ```
 
+### 旧项目架构生成
+
+`initProjectScaffold()` 返回的 `summary.architectureCandidate` 是旧项目架构生成的唯一入口判定。不得在 skill 内复制 eligibility 算法；需要复核时直接从 lib 导入 `detectArchitectureCandidate`。
+
+处理流程：
+
+1. 先完成 init lib 三步脚手架，再读取 `summary.architectureCandidate`。
+2. 如果 `architectureCandidate.eligible === false`，不得生成架构文档；回执说明跳过原因：
+   - `no_source`：未检测到足够源码。
+   - `multiple_source_roots`：检测到多源码根 / monorepo 信号，需用户手写或指定范围。
+   - `architecture_exists`：`docs/01_架构设计/` 下已有非模板 `.md`，不得覆盖。
+   回执同时带上 lib 返回的 `sourceRoots` / `existingArchitectureDocs`（非空时）。
+3. 如果 `architectureCandidate.eligible === true`，进入 agent 层证据门槛。必须同时满足：
+   - 能拿到项目目录树。
+   - 至少有 1 类 grounding 源：README、依赖 manifest、入口文件。
+   - 至少能填出「概述」「技术栈」「项目结构」「核心模块 / 入口」四块。
+4. 证据门槛不满足时，不生成文件；回执使用 `evidence_insufficient`，说明证据不足、建议手写，并列出缺少哪类证据。
+5. 证据足够时，优先使用 `/sc:analyze` + `/sc:index-repo` 获取结构证据；SC 不可用时，直接读取 README、入口文件、依赖 manifest 和目录树兜底。
+6. 按 `templates/docs/01_架构设计/_模板_架构.md` 的章节结构渲染架构文档，只填有据章节：
+   - 技术栈来自依赖 manifest。
+   - 项目结构来自目录树。
+   - 核心模块来自顶层目录、入口文件和 import 关系，必要时标为 inferred。
+   - 概述来自 README 或等价项目说明。
+7. 推不出的章节直接省略，包括部署拓扑、外部服务、权限模型、关键数据流、历史意图。正文不得写 TODO、待校正、也不得用 hedge 文本代替证据。
+8. 生成文档 frontmatter 只写：
+
+```yaml
+---
+doc_type: architecture
+updated: YYYY-MM-DD
+generated_by: su-init-ai
+human_verified: false
+---
+```
+
+不得写 `status` 字段，不得生成 02_需求、04_模块规格等其它文档。
+
+写盘纪律：
+
+1. 写盘前必须二次检测：
+
+```js
+import { detectArchitectureCandidate } from "../../lib/su-init/index.mjs";
+
+const latest = await detectArchitectureCandidate({ projectRoot });
+```
+
+2. 若 `latest.eligible !== true`，按最新 `reason` 跳过并回执，不写文件。
+3. 若仍 eligible，只能写 `latest.targetPath`。目标路径是项目内相对路径，写盘时拼到 `projectRoot` 下。
+4. 必须使用 final path 独占创建，例如：
+
+```js
+await writeFile(targetPath, content, { encoding: "utf8", flag: "wx" });
+```
+
+或等价的 `open(targetPath, "wx")`。禁止使用 `safeWriteFile` 或任何 temp + rename helper，因为 final rename 可能覆盖竞态文件。
+5. 如果写盘返回 `EEXIST`，放弃生成并回执提示目标文件已存在，不得覆盖或重试改名。
+
 ## 4. Plugin 独立运行约定
 
 初始化的目标是让项目没有 Console 也能工作。至少创建或校验：
@@ -86,3 +144,8 @@ sc 不可用时，说明替代扫描方式。
 ## 6. 用户可见输出
 
 输出初始化摘要、创建/保留/跳过的文件、未覆盖原因、下一步建议和可直接运行的 `/ccb:su-flow` 示例。
+
+若触发旧项目架构生成流程，回执还必须包含：
+
+- 生成时：醒目标明「AI 生成、建议 review、要改直接对话」，列出写入路径和 evidence sources 摘要（目录树、README、manifest、入口文件、SC 结果等实际使用项）。
+- 跳过时：列出跳过原因。eligibility 失败使用 `architectureCandidate.reason`，并带上 `sourceRoots` / `existingArchitectureDocs`（非空时）；证据不足使用 `evidence_insufficient` 并列缺少哪类证据；目标文件竞态存在时说明 `EEXIST` / 已存在且未覆盖。
