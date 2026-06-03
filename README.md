@@ -134,6 +134,14 @@ $skill-installer install https://github.com/Im-Sue/su-ccb-codex-skills/tree/main
 - 节点行为真相源：`references/kernel/nodes/*.node.md`（plugin 自带 kernel snapshot）。
 - 本地：`claude --plugin-dir ./` 加载、`/plugin validate .` 校验。
 
-## License & Author
+## 交流与讨论
 
-MIT · **Sue** | [GitHub](https://github.com/Im-Sue) | TG: @Sue_muyu
+有问题、想法，或想参与共建？扫码加微信（备注 **CCB**），拉你进讨论群：
+
+<img src="assets/wechat.jpg" alt="微信二维码" width="220" />
+
+GitHub [@Im-Sue](https://github.com/Im-Sue) · Telegram [@Sue_muyu](https://t.me/Sue_muyu)
+
+## License
+
+MIT · **Sue**
