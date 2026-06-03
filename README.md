@@ -1,18 +1,90 @@
-# SU-CCB Claude Plugin
+# SU-CCB Claude Plugin（`ccb`）
 
-> Claude + Codex Multi-AI Collaboration Framework
+> **从 Vibe Coding 到 Vibe Engineering** —— Vibe Coding 解决产出速度，Vibe Engineering 解决**稳定做对**。
 
-本仓是 **SU-CCB 框架的 Claude 侧插件**（plugin 名 `ccb`）—— 一套将 AI 协作视为**工程管理问题**而非"智能补全工具"的 Claude Code 插件。它在 Claude 和 Codex 之间建立设计-执行分离、审批门控、多轮协商、结构化回执的完整协作流程。
+本仓是 **SU-CCB 框架的 Claude 侧插件**，也是整套协作的**主入口**。它把"和 AI 写代码"从一场灵感式对话，变成一个**可控、可复用、可审计的工程过程**。
 
-## Quick Start
+## 从 Vibe Coding 到 Vibe Engineering
+
+AI 已经很会写代码了。但做项目时我们还是常常不放心 —— 问题已经不是 **AI 能不能写**，而是 **AI 能不能持续做对**。
+
+用 AI 写代码的人大多踩过：写得快但方向容易错、第二三轮开始跑偏、上下文漂移、改着改着和原始需求脱节、返工和 review 成本高、很难复盘"为什么这么改"。这些表面是体验问题，本质是**工程问题**。而且——
+
+> **不是生成最贵，是"确认"最贵。** 真正烧钱的是方向走偏后的返工、上下文丢失后的重复沟通、审查时重新理解背景、团队协作时无法复盘。
+
+**Vibe Engineering** 就是把 AI 协作当成一个**工程过程来管理**，而不是当成一个更聪明的补全工具。它要解决的不是"写得快"，而是把高风险的环节先管住，让结果**可控、可复用、可审计**：
+
+| | 含义 |
+|---|---|
+| **可控** | 关键节点有审批门，避免"正确地执行了错误的目标" |
+| **可复用** | 需求 / 设计 / 决策 / 状态写成结构化文档落在仓库里，可 diff、可恢复、可沿用 |
+| **可审计** | 每一步都有节点、协商记录和归档证据 —— 谁、为什么、怎么验证，全程可复盘 |
+
+## 解决什么问题，带来什么收益
+
+| Vibe Coding 的痛点 | SU-CCB 怎么管 | 你得到的收益 |
+|---|---|---|
+| 方向容易错、越改越偏 | 需求 / 设计先过审批门 | 方向锁定，不再"正确地执行错误的目标" |
+| 上下文漂移、和需求脱节 | 状态 / 决策落仓库文档 | 随时可恢复，断点续作不丢上下文 |
+| 返工成本高 | 协商前置，想清楚再做 | 返工大幅减少，一次做对 |
+| Review 成本大、看不懂改了啥 | 结构化精简回执 | 几分钟看懂一次执行，不必从头读 diff |
+| 无法复盘"为什么这么改" | 全程节点 / 证据留痕 | 任何决策可追溯、可审计 |
+| 多人协作混乱、责任不清 | 角色分工 + 契约 + 审批门 | 协作可治理，谁决策 / 谁执行 / 谁验证一目了然 |
+
+**对项目管理的意义**：把原来散落在人脑里、靠人从头盯到尾兜底的 Planning / Execution / Review，变成**可重复、可约束、可审查**的流程 —— 高风险任务先被管住，团队对"AI 到底做了什么、做得对不对"有据可查。
+
+## 适合谁用
+
+| | 场景 |
+|---|---|
+| **✅ 推荐** | 独立专业开发者、高级小团队，后端 / 平台 / 集成密集型，跨模块改动、接口 / Schema 变更、遗留系统改造、需要复盘审计的项目 |
+| **🟡 有条件** | 移动 / 全栈产品团队（裁剪协商、保留快速通道） |
+| **❌ 不推荐** | 原型优先、超小项目、一次性脚本、高度视觉化探索性产品 |
+
+判断标准一句话：**只要"方向错一次"的成本很高，就值得上这套；改回来很便宜的小事，留快速通道。**
+
+## 做了哪些工程化管理
+
+SU-CCB 的本质，是把**人类工程团队成熟的管理实践**搬到 AI 协作上：
+
+- **角色分工**：Claude 是决策者（需求理解、技术方案、任务切片、审查把关），Codex 是执行者（落地实现、验证、回执）。谁想清楚、谁做出来、谁在关键节点停下来确认 —— 边界越清晰越工程化，而不是把一个 agent 当全能。
+- **审批门（sign-off）**：像 code review 的签字。🔴 需求 / 设计必须用户确认 · 🟡 任务切片展示摘要可放行 · 🟢 审查触发自动进行。
+- **协商前置（design review）**：实施前先让执行方质疑方案。进入业务节点时 Claude 自动与 Codex 多轮协商现状、可行性、最优方案，对用户透明，只在审批门确认。
+- **主动回抛（escalation）**：Codex 遇到边界不硬猜，主动把不确定性抛回，而不是做完才发现前提错。
+- **结构化回执（handoff）**：执行完先给一份像 PR 描述的精简结论 —— 改了什么 / 为什么 / 怎么验证 / 有什么风险，审查者不必从头读 diff。
+- **全程留痕（audit trail）**：需求、设计、决策、状态、证据都落在 `docs/` 与 `docs/.ccb/`，可 diff、可恢复、可复盘。
+
+> 一句话：**没有协议，AI 协作只是高级聊天；有了协议（节点 / 审批门 / 回抛 / 回执），才开始像工程。** prompt 和 skills 提升能力上限，工作流与协议才解决协作稳定性。
+
+## 业务流程
+
+`/ccb:su-flow` 是主入口，按用户意图在 **7 个业务节点**中推进，每个节点有进入条件、硬约束和完成判定：
+
+```text
+需求分析 → 技术设计 → 任务拆分 → 派工 → 实施 → 审查 → 归档
+```
+
+一个任务在 Claude 与 Codex 之间的流转：
+
+```text
+用户提出
+  → Claude 判断是否需要协商 / 勘探现状
+  → Codex 协商（consult）/ 勘探现状与风险
+  → Claude 确认方案与任务切片  ……（审批门）
+  → Codex 实施 + 验证
+  → Codex 精简回执
+  → Claude 审查把关
+  → 归档证据（可复盘）
+```
+
+## 快速开始
 
 ```bash
 # 1. 安装 Claude Plugin
 /plugin marketplace add Im-Sue/su-ccb-claude-plugin
 /plugin install ccb@SU-CCB
 
-# 2. 安装 Codex Skills（配套仓库）
-# 在 Codex 会话中执行：
+# 2. 安装配套 Codex Skills（在 Codex 会话中执行）
 $skill-installer install https://github.com/Im-Sue/su-ccb-codex-skills/tree/main/skills/ccb-execute
 $skill-installer install https://github.com/Im-Sue/su-ccb-codex-skills/tree/main/skills/ccb-doc
 
@@ -20,151 +92,48 @@ $skill-installer install https://github.com/Im-Sue/su-ccb-codex-skills/tree/main
 /ccb:su-init
 ```
 
-## Commands
+> **前置必装**：底层运行时 [claude_codex_bridge](https://github.com/SeemSeam/claude_codex_bridge)（`ccb` / `ccbd`，提供 Claude↔Codex 桥接）。从 [Releases](https://github.com/SeemSeam/claude_codex_bridge/releases) 下载后 `./install.sh install`，或源码 clone。**仅支持 WSL 与 macOS**（原生 Windows 走 WSL）。
 
-> 主入口是 `/ccb:su-flow`：按用户意图进入 7 个业务节点之一（需求分析 → 技术设计 → 任务拆分 → 派工 → 实施 → 审查 → 归档）。其余命令是同一流程的快捷意图入口与状态 / 维护指令。
+## 命令
+
+> 主入口是 `/ccb:su-flow`；其余命令是同一流程的快捷意图入口与状态 / 维护指令。
 
 | 命令 | 用途 |
 |------|------|
-| `/ccb:su-flow` | **主入口**：按意图在 7 个业务节点中推进需求分析、设计、拆分或后续执行 |
+| `/ccb:su-flow` | **主入口**：按意图在 7 个业务节点中推进需求、设计、拆分或后续执行 |
 | `/ccb:su-init` | 初始化项目骨架（扫描技术栈、生成 CLAUDE.md / AGENTS.md / docs/.ccb/） |
-| `/ccb:su-dispatch` | 派工意图入口：将已确认子任务异步派给执行 agent |
-| `/ccb:su-review` | 审查意图入口：审执行回执、diff、验证证据，决定通过 / 返工 / replan / 升级 |
-| `/ccb:su-archive` · `/ccb:su-quick-archive` | 归档意图入口：固化完成证据、风险与后续建议；低风险走快速通道 |
-| `/ccb:su-materialize-requirement` | 将已审查通过的 breakdown draft 物化为子任务（dev_task） |
-| `/ccb:su-revise-breakdown` · `/ccb:requirement-reanalyze` | 重写拆分草案 / 重新分析需求原文，修正理解漂移 |
+| `/ccb:su-dispatch` · `/ccb:su-review` | 派工 / 审查意图入口 |
+| `/ccb:su-archive` · `/ccb:su-quick-archive` | 归档：固化证据、风险与后续建议；低风险走快速通道 |
+| `/ccb:su-materialize-requirement` | 将已审查通过的 breakdown draft 物化为子任务 |
+| `/ccb:su-revise-breakdown` · `/ccb:requirement-reanalyze` | 重写拆分草案 / 重新分析需求，修正理解漂移 |
 | `/ccb:su-status` · `/ccb:su-resume` | 查看状态 / 从中断处恢复上下文 |
-| `/ccb:su-reconcile` | AI-native 自检 docs 真相源、`.ccb` 协调件与 Console 投影漂移并按审批修复 |
+| `/ccb:su-reconcile` | 自检 docs 真相源、`.ccb` 协调件与 Console 投影漂移并修复 |
 | `/ccb:su-approve` · `/ccb:su-batch` | 记录审批 / 设定 autonomous-batch 授权范围与停止边界 |
 | `/ccb:su-cancel` · `/ccb:su-defer` · `/ccb:su-reactivate` | Requirement / 子任务大状态控制 |
-| `/ccb:su-plan` | _(deprecated alias → `/ccb:su-flow`，保留到 v1.5 grace window)_ |
+| `/ccb:su-plan` | _(deprecated alias → `/ccb:su-flow`)_ |
 
-## Core Features
-
-### Design-Execution Separation
-Claude 做决策（需求、设计、审查），Codex 做执行（编码、验证、文档）。角色不混淆。
-
-### Kernel Reference Snapshot
-本 plugin 自带 SU-CCB kernel snapshot。下游项目初始化后通过项目相对路径 `references/kernel/` 引用该快照；节点行为真相源是 `references/kernel/nodes/*.node.md`。
-
-Active kernel behavior lives under `references/kernel/`; retired YAML node definitions are no longer distributed.
-
-### Multi-Round Consultation
-进入任一业务节点时 Claude 自动与 Codex 进行多轮协商：
-- 收集代码现状意见、可行性分析、最优方案探讨
-- 轮次与停止条件以节点 manifest / capability 为准
-- 协商对用户透明，只需在审批门确认
-
-### Approval Gates
-- **Red**: 必须等用户确认（需求、设计）
-- **Yellow**: 展示摘要，用户可放行（任务切片）
-- **Green**: 自动进行（审查触发）
-
-### Structured Contracts
-- **Ask Contract**: 派工时传什么、不传什么
-- **Receipt Contract**: Codex 回执 <2k，精简导航图
-- **Consult Contract**: 协商请求/回复的结构化格式
-- **Bounceback Rules**: 9 种情况 Codex 必须回抛
-
-## Runtime
-
-Plugin 脚本需要写 `docs/.ccb/` 真相源文件时，应先走 `lib/runtime/`，避免半截文件、并发覆盖和无审计痕迹。
-
-Anchor dispatch 命令使用 structured JSON payload：`/ccb:<skill> --payload <json-object>`。业务字段保持原生 JSON string/object/array，不再为多行文本或嵌套对象做业务层 base64 编码。
-
-| 函数 | 何时调用 |
-|---|---|
-| `safeWriteFile(path, content, options)` | 写 markdown/json/yaml 文件，支持 atomic write 与 `expectedHash` CAS |
-| `acquireFileLock(path)` | 需要手动包住较长的读-改-写流程 |
-| `withFileLock(path, fn)` | 推荐的读-改-写封装，自动释放 lock |
-| `validateAgainstSchema(content, schemaName)` | 写前按 `references/kernel/schemas/` 选择结构校验器；业务规则由领域 lib 兜底 |
-| `appendEvent(event, options)` | 写入后向 `docs/.ccb/events/journal.jsonl` 留审计事件 |
-
-runtime 错误默认 fail-closed：`ConflictError` 需要重读再决策，`ValidationError` 不允许强写，`LockTimeoutError` 通常应升级给用户或稍后重试。
-
-File lock 会写 `<path>.lock/owner.json`（pid、hostname、acquired_at）。再次获取锁时，如果 owner pid 已不存在，会清理一次 stale lock 后重试；如果 pid 仍存活、hostname 不同、或 owner 文件缺失/损坏，则按原 timeout 流程失败，避免误删其他活跃 anchor 的锁。
-
-EventJournal append 在 idempotency 扫描时会跳过坏 JSON 行并打印 warning；正常行的 idempotency key 仍会去重。坏行不会阻止后续事件写入，但应由后续 reconcile/audit 清理。
-
-### Hook Notifier
-
-`appendEvent(event, options)` 成功写入新 EventJournal 行后，会向本机 Console 发送一次 fail-open 通知，触发 Console `scanProject` 重新投影文件真相源。重复 idempotency event 不触发通知。
-
-默认 receiver 是 `http://127.0.0.1:3030/api/plugin-hooks/event-journal`，也可用 `ccb.config.yaml` 的 `plugin_hooks.event_journal_urls` 或环境变量 `CCB_EVENT_HOOK_URLS` 覆盖。v1.0 只允许 localhost URL；非 localhost 会被跳过并打印 warning。
-
-hook timeout 固定为 300ms，不重试；receiver 不可用、超时或返回非 2xx 都不会回滚 EventJournal 写入。
-
-## Dev Task State Library
-
-`lib/state/` 是历史命名的兼容 API；当前实现读写 `docs/03_开发计划/` 的 `dev_task` 文档 frontmatter。运行时 Task 投影读取 dev_task 的 `status/current_node/node_substate/review_status`；批量授权与运行审计写 EventJournal。
-
-任务状态写入必须走 `writeTaskState({ projectRoot, taskId, patch, expectedHash })` 兼容入口，并由 `lib/state/business-rules.mjs` 校验状态枚举、节点枚举、ISO8601 时间戳和 `updated_by` 来源。
-
-## Reconcile Library
-
-`lib/reconcile/` 是 `/ccb:su-reconcile` 的维护入口，不是第 8 节点。它按 ADR-0025 扫描文件真相源、EventJournal 与 Console DB projection 的漂移，生成 `docs/.ccb/drafts/reconcile/YYYY-MM/reconcile-<timestamp>.md` 报告，并在用户审批后 apply。
-
-apply 阶段不会直接写 Console DB。`quick_archive`、`set_status`、`unset_archive` 会写 dev_task frontmatter 并追加 `state_reconciled` EventJournal；`rollup_requirement` 只触发投影刷新语义。
-
-## Breakdown Draft Library
-
-`lib/breakdown-draft/` 是 Phase 2a 的拆分草案唯一写入入口。涉及 `docs/.ccb/drafts/breakdown/<requirementId>.json` 的 skill 必须 import 这些函数，禁止直接 `fs.writeFile` / `fs.rm` 修改 draft 文件。
-
-写入前会先执行 breakdown-draft 业务规则校验：`section_id` 必须使用 `prN-slug` 格式，`order` 必须从 1 连续递增并与 `section_id` 编号一致，`implementation_owner` 只能是 `claude` 或 `ccb_codex`，依赖必须引用同一 draft 内已有 section，spec markdown 不能是空壳，`review_history` 必须是数组。
-
-| 函数 | 何时调用 |
-|---|---|
-| `createBreakdownDraft({ projectRoot, requirementId, draftPayload })` | 生成新拆分草案 |
-| `updateBreakdownDraft({ projectRoot, requirementId, patch, expectedHash })` | 修改草案内容，必须带当前 hash |
-| `transitionBreakdownDraftStatus({ projectRoot, requirementId, expectedHash, fromStatus, toStatus, ... })` | begin-review / approve / reject，必须带当前 hash |
-| `readBreakdownDraft({ projectRoot, requirementId })` | 读取草案并返回 canonical hash |
-| `deleteBreakdownDraft({ projectRoot, requirementId })` | 删除草案；先写 `breakdown_draft_deleted` journal，journal 失败则不删文件 |
-
-v1.x 暂不写 tombstone 文件；删除审计以 EventJournal 为准。
-
-## SubTask Materialization Library
-
-`lib/subtask/` 是子任务物化入口。`/ccb:su-materialize-requirement` 必须调用 `materializeRequirement({ projectRoot, requirementId, expectedDraftHash })`，禁止直接 `fs.writeFile` 写开发任务文档。
-
-物化规则：
-- 只接受已批准的 `docs/.ccb/drafts/breakdown/<requirementId>.json`。
-- `expectedDraftHash` 必须匹配用户审查过的 draft hash。
-- 每个 included subtask 经 docs-structure resolver 生成一个 `docs/03_开发计划/*开发任务.md`，frontmatter 使用 `doc_type: dev_task`、`task_id`、`status/current_node/node_substate` 等字段。
-- 所有 dev_task 文档都成功写入后才把 draft 标记为 `consumed`，避免“子任务没生成完但草案显示已消费”。
-- 重复执行同一 draft hash 会跳过已存在 dev_task，并通过 EventJournal idempotency key 去重。
-
-## Dependencies
+## 依赖
 
 | 依赖 | 类型 | 说明 |
 |------|------|------|
 | [su-ccb-codex-skills](https://github.com/Im-Sue/su-ccb-codex-skills) | **必需** | Codex 侧执行和文档 skills |
-| [claude_codex_bridge](https://github.com/SeemSeam/claude_codex_bridge) — `ccb` CLI + `ccbd` 守护进程 | **必需** | Claude ↔ Codex 多 agent 桥接运行时（`ccb ask` / dispatch）。v7+，仅 WSL / macOS |
-| [SuperClaude](https://github.com/SuperClaude-Org/SuperClaude_Framework) | 可选增强 | 协商和审查阶段深度分析 |
-| [Superpowers](https://github.com/obra/superpowers) | 可选增强 | Codex 执行阶段能力增强 |
+| [claude_codex_bridge](https://github.com/SeemSeam/claude_codex_bridge) | **必需** | `ccb` / `ccbd` 多 agent 桥接运行时（v7+，仅 WSL / macOS） |
+| [SuperClaude](https://github.com/SuperClaude-Org/SuperClaude_Framework) · [Superpowers](https://github.com/obra/superpowers) | 可选增强 | 协商 / 审查深度分析、执行能力增强；缺失不阻塞 |
 
-> **环境**：仅支持 WSL 与 macOS（原生 Windows 走 WSL）。底层运行时 `claude_codex_bridge` 必装 —— 从 [Releases](https://github.com/SeemSeam/claude_codex_bridge/releases) 下载后 `./install.sh install`，或源码 clone（详见其 README）。
-SuperClaude / Superpowers 缺失时 CCB 正常运行，不阻塞。
+---
 
-## Best For
+## 开发者参考
 
-- **Recommended**: 独立专业开发者、高级小团队、后端/平台/集成密集型项目
-- **Conditionally Recommended**: 移动/全栈产品团队（裁剪协商+快速通道）
-- **Not Recommended**: 原型优先、超小项目、高度视觉化探索性产品
+> 日常使用不需要看这里。核心约束：**所有对 `docs/.ccb/` 真相源的写入都走 `lib/`**（atomic write + CAS + lock + schema 校验 + 审计），禁止直接 `fs.writeFile`；anchor dispatch 用 structured JSON payload `/ccb:<skill> --payload <json>`。
 
-## Development
+- **`lib/runtime/`** — 写入底座：`safeWriteFile`（atomic + `expectedHash` CAS）、`withFileLock`、`validateAgainstSchema`、`appendEvent`（写 `docs/.ccb/events/journal.jsonl` 并 fail-open 通知本机 Console 重投影）。错误 fail-closed（`ConflictError` 重读、`ValidationError` 不强写、`LockTimeoutError` 升级或重试）。
+- **`lib/state/`** — dev_task 状态读写，走 `writeTaskState(... expectedHash)`，`business-rules.mjs` 校验枚举 / ISO8601 / 来源。
+- **`lib/breakdown-draft/`** — 拆分草案唯一写入入口（CAS hash 必带），校验 `section_id`/`order`/`owner`/依赖/非空壳。
+- **`lib/subtask/`** — `materializeRequirement(... expectedDraftHash)` 把已批准 draft 物化为 `docs/03_开发计划/*开发任务.md`，全部写成功才标 `consumed`。
+- **`lib/reconcile/`** — `/ccb:su-reconcile` 维护入口：扫描文件真相源 / EventJournal / Console projection 漂移，生成报告、审批后 apply。
+- 节点行为真相源：`references/kernel/nodes/*.node.md`（plugin 自带 kernel snapshot）。
+- 本地：`claude --plugin-dir ./` 加载、`/plugin validate .` 校验。
 
-```bash
-# 本地测试（不安装，直接加载）
-claude --plugin-dir ./
+## License & Author
 
-# 验证 plugin 结构
-/plugin validate .
-```
-
-## License
-
-MIT
-
-## Author
-
-**Sue** | [GitHub](https://github.com/Im-Sue) | TG: @Sue_muyu
+MIT · **Sue** | [GitHub](https://github.com/Im-Sue) | TG: @Sue_muyu
