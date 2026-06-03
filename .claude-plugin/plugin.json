@@ -6,8 +6,8 @@
     "name": "Sue",
     "url": "https://github.com/Im-Sue"
   },
-  "homepage": "https://github.com/SU-CCB/su-ccb-claude-plugin",
-  "repository": "https://github.com/SU-CCB/su-ccb-claude-plugin",
+  "homepage": "https://github.com/Im-Sue/su-ccb-claude-plugin",
+  "repository": "https://github.com/Im-Sue/su-ccb-claude-plugin",
   "license": "MIT",
   "keywords": ["ccb", "collaboration", "codex", "multi-agent", "planning", "review", "workflow"],
   "skills": "./skills/"

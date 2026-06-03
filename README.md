@@ -2,19 +2,19 @@
 
 > Claude + Codex Multi-AI Collaboration Framework
 
-SU-CCB 是一套 Claude Code 插件，将 AI 协作视为**工程管理问题**而非"智能补全工具"。它在 Claude 和 Codex 之间建立了设计-执行分离、审批门控、多轮协商、结构化回执的完整协作流程。
+本仓是 **SU-CCB 框架的 Claude 侧插件**（plugin 名 `ccb`）—— 一套将 AI 协作视为**工程管理问题**而非"智能补全工具"的 Claude Code 插件。它在 Claude 和 Codex 之间建立设计-执行分离、审批门控、多轮协商、结构化回执的完整协作流程。
 
 ## Quick Start
 
 ```bash
 # 1. 安装 Claude Plugin
-/plugin marketplace add SU-CCB/su-ccb-claude-plugin
+/plugin marketplace add Im-Sue/su-ccb-claude-plugin
 /plugin install ccb@SU-CCB
 
 # 2. 安装 Codex Skills（配套仓库）
 # 在 Codex 会话中执行：
-$skill-installer install https://github.com/SU-CCB/su-ccb-codex-skills/tree/main/skills/ccb-execute
-$skill-installer install https://github.com/SU-CCB/su-ccb-codex-skills/tree/main/skills/ccb-doc
+$skill-installer install https://github.com/Im-Sue/su-ccb-codex-skills/tree/main/skills/ccb-execute
+$skill-installer install https://github.com/Im-Sue/su-ccb-codex-skills/tree/main/skills/ccb-doc
 
 # 3. 在项目中初始化
 /ccb:su-init
@@ -137,11 +137,12 @@ v1.x 暂不写 tombstone 文件；删除审计以 EventJournal 为准。
 
 | 依赖 | 类型 | 说明 |
 |------|------|------|
-| [su-ccb-codex-skills](https://github.com/SU-CCB/su-ccb-codex-skills) | **必需** | Codex 侧执行和文档 skills |
-| CCB v6 runtime — CLI：`ccb ask`、`ccb pend`、`ccb ping`；daemon：`ccbd` | **必需** | Claude-Codex 通讯基础设施 |
+| [su-ccb-codex-skills](https://github.com/Im-Sue/su-ccb-codex-skills) | **必需** | Codex 侧执行和文档 skills |
+| [claude_codex_bridge](https://github.com/SeemSeam/claude_codex_bridge) — `ccb` CLI + `ccbd` 守护进程 | **必需** | Claude ↔ Codex 多 agent 桥接运行时（`ccb ask` / dispatch）。v7+，仅 WSL / macOS |
 | [SuperClaude](https://github.com/SuperClaude-Org/SuperClaude_Framework) | 可选增强 | 协商和审查阶段深度分析 |
 | [Superpowers](https://github.com/obra/superpowers) | 可选增强 | Codex 执行阶段能力增强 |
 
+> **环境**：仅支持 WSL 与 macOS（原生 Windows 走 WSL）。底层运行时 `claude_codex_bridge` 必装 —— 从 [Releases](https://github.com/SeemSeam/claude_codex_bridge/releases) 下载后 `./install.sh install`，或源码 clone（详见其 README）。
 SuperClaude / Superpowers 缺失时 CCB 正常运行，不阻塞。
 
 ## Best For
