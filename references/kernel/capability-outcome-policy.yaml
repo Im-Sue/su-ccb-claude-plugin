@@ -123,11 +123,14 @@ policies:
     state_effects:
       status: set:delivered
     evidence_required:
-      mode: all
+      mode: any
       items:
         - kind: C
           source: dev_task_scope
           check_id: dev_task_scope_terminal
+        - kind: C
+          source: dev_task_requirement
+          check_id: dev_task_requirement_terminal
     must_ask_refs: []
     guards:
       - no_self_referential_event

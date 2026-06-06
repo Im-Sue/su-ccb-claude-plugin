@@ -19,7 +19,8 @@ const CHECK_IDS = new Set([
   "count_gt_zero",
   "hash_matches",
   "journal_event_exists",
-  "dev_task_scope_terminal"
+  "dev_task_scope_terminal",
+  "dev_task_requirement_terminal"
 ]);
 const STATE_FIELDS = new Set([
   "status",

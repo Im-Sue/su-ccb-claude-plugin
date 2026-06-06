@@ -47,23 +47,33 @@ metadata:
 5. 每个子任务完成后让文件真相源落地，Console 通过现有 per-subtask 状态投影展示进度；本轻量契约不维护独立 batch 进度条。
 6. 失败即停：任一子任务 implementation/review/archive 失败时，停止后续子任务，报告已 done、未 done、失败子任务和原因。`stop_policy.on_subtask_failure="stop_and_report"` 是默认且唯一支持策略。
 7. 本档不做精细 cursor 断点续跑；恢复时必须重新读取 dev_task frontmatter 和 EventJournal，再向用户说明可安全继续的范围。
-8. 当最后一个 scope 成员归档完成后，AI 执行 requirement 收尾判断；scope 以 batch 授权文件
-   EventJournal 批量授权事件里的 `members.task_key` / `execution_order` 为准，不用 DB 查询扩大范围。满足交付条件时由
-   `requirement.finalize` capability outcome 写 requirement md `status: delivered`；不满足则拒绝并说明原因。
+8. 每个子任务 archive 只写该 dev_task 真相源终态，不调用 worktree merge/cleanup。当最后一个
+   scope 成员归档完成后，AI 执行 requirement 收尾判断：调用本技能内的
+   `isRequirementFullyTerminal(requirementId)`，扫描该需求下全部 dev_task，排除
+   `status: cancelled` 后确认每个剩余 dev_task 均为
+   `status: done + current_node: archive + review_status: passed`，且无未物化的
+   approved follow-up draft。若为真，背靠背执行 `mergeRequirementWorktree()` →
+   `cleanupRequirementWorktree()` → `requirement.finalize` capability outcome（使用
+   `dev_task_requirement_terminal` evidence）写 requirement md `status: delivered`；若为假，
+   不合并、不 finalize，并说明仍未终态的 requirement 内子任务或 follow-up。
 9. **投影收敛（不依赖 watcher）**：每个子任务归档后、以及 finalize 后，best-effort 主动触发一次 Console 投影刷新（本地 Console 在跑时 `POST /api/projects/<projectId>/scan`），并校验关键投影（子任务 `current_node/status`、需求 `status`）与 canonical 文件一致。WSL2 watcher 会漏文件事件，故不得只依赖它异步跟上；Console 不可达或投影与 canonical 不一致时，明确告知用户需手动 scan，不得在投影未确认收敛时声称"已交付且界面一致"。
 
 使用 helper 时从 plugin lib 引入：
 
 ```js
-import { ensureRequirementWorktree } from "../../lib/worktree/index.mjs";
+import {
+  cleanupRequirementWorktree,
+  ensureRequirementWorktree,
+  mergeRequirementWorktree
+} from "../../lib/worktree/index.mjs";
 ```
 
 ## 4. Plugin 独立运行约定
 
-batch 授权写入 EventJournal。`members.task_key` 是后续
-`dev_task_scope_terminal` evidence 的授权 scope 来源，`members.task_id` 仅用于和
-Console/DB 投影做一致性观察。后续节点推进仍由 plugin 文件真相源驱动，不调用 Console
-业务写入接口。
+batch 授权写入 EventJournal。`members.task_key` / `execution_order` 是批次执行和审计
+scope 来源；需求收尾以 `isRequirementFullyTerminal(requirementId)` 的全需求扫描为准，并使用
+`dev_task_requirement_terminal` evidence。`members.task_id` 仅用于和 Console/DB 投影做一致性观察。
+后续节点推进仍由 plugin 文件真相源驱动，不调用 Console 业务写入接口。
 
 ## 5. 强协商与 sc 要求
 

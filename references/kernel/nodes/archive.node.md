@@ -36,22 +36,21 @@ status: active
 4. 找 Codex 协商归档是否完整，尤其检查是否遗漏风险或后续事项。
 5. 写 4 段反思，明确归档内容是否被修订。
 6. 处理命中的必问项：例如是否公开报告、是否触发后续任务、是否保留敏感信息。
-7. 写 dev_task 终态或归档记录前，调用 `archiveRequirementWorktree`：校验 worktree+主仓 clean、校验运行态记录的 `target_branch`，merge 回该分支后 remove worktree 并 `branch -d`；target 缺失、主仓分支不匹配或 merge 冲突时升级并保留 worktree+分支。
+7. 子任务归档只写 dev_task 终态和归档记录，不调用 worktree merge/cleanup；per-需求 worktree 必须保留到该需求全部非 cancelled dev_task 终态之后再由需求级收尾处理。
 8. 写归档记录：完成内容、验证证据、风险、后续建议。
 9. 更新 Requirement / DeliveryUnit 的完成投影文件。子任务归档时必须让
    `docs/03_开发计划/` 的 dev_task frontmatter 至少包含：
    `status: done`、`current_node: archive`、`node_substate: archived`、
    `review_status: passed`。
-10. 若本次归档的是 requirement 授权 scope 内最后一个待归档子任务，AI 必须做一次
-   requirement 收尾判断；scope 以 batch 授权文件 `members.task_key` /
-   `execution_order` 为准，DB `Task.requirementId` 只作一致性校验。确认 scope 全部
-   dev_task `status: done + current_node: archive + review_status: passed`、
-   无遗留必须处理事项、无未决 must_ask。没有 EventJournal 批量授权事件或等价的
-   显式 task_keys scope 时，不做 DB fallback、不声明 delivered，必须先报告 scope 不明确。
-   满足条件时才可通过 `applyCapabilityOutcome()` 声明
-   `capability_id=requirement.finalize` / `outcome_type=delivered`。调用必须携带
-   requirement md 的 `expectedHash`/`base_hash` 和 `dev_task_scope_terminal`
-   evidence；AI 判断不满足时不得声明 delivered，并说明拒绝原因。
+10. 若本次归档后可能已是 requirement 最后一个待归档子任务，AI 必须做一次
+   requirement 收尾判断：扫描该 `requirement_id` 下全部 dev_task，排除 `status: cancelled`
+   后，确认每个剩余 dev_task 均为 `status: done + current_node: archive +
+   review_status: passed`，且无遗留必须处理事项、无未决 must_ask。满足条件时按需求级
+   生命周期背靠背执行 `mergeRequirementWorktree()` → `cleanupRequirementWorktree()` →
+   `applyCapabilityOutcome()` 声明 `capability_id=requirement.finalize` /
+   `outcome_type=delivered`；finalize 调用必须携带 requirement md 的
+   `expectedHash`/`base_hash` 和 `dev_task_requirement_terminal` evidence。任一步返回
+   escalation 或 AI 判断不满足时，不得声明 delivered，并说明拒绝原因。
 11. 记录 EventJournal：archive_started、archive_completed、rollup_updated。
 12. 自然停下或进入下一个已授权节点。
 
@@ -63,7 +62,7 @@ status: active
 
 第 6 点很关键。归档可能涉及公开、删除临时文件、生成后续任务或暴露敏感信息，这些可能命中用户必问清单。
 
-worktree 归档必须使用运行态记录的 `target_branch`，绝不 fallback 到 `main`。`archiveRequirementWorktree` 返回升级信号时，不得继续写 done 终态或删除现场；应把缺失分支、dirty preflight、divergence warning 或冲突信息纳入归档阻塞说明。
+需求级 worktree 收尾必须使用运行态记录的 `target_branch`，绝不 fallback 到 `main`。`mergeRequirementWorktree` 或 `cleanupRequirementWorktree` 返回升级信号时，不得继续声明 delivered 或删除未校验现场；应把缺失分支、dirty preflight、divergence warning 或冲突信息纳入归档阻塞说明。子任务 archive 已经通过 review 时仍可先落 dev_task 终态，但不得因此提前 merge/cleanup per-需求 worktree。
 
 ## ③ 什么时候算这个模式完成？
 
