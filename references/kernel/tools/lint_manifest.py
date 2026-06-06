@@ -484,7 +484,7 @@ def lint_hierarchy_contract(root: Path, kernel_dir: Path, registry: Registry) ->
     enums = state.get("enums") or {}
     fields = state.get("dev_task", {}).get("fields") or {}
     requirement_status = set((enums.get("requirement_status") or {}).get("values") or [])
-    expected_requirement_status = {"draft", "analyzed", "delivering", "delivered", "deferred", "cancelled"}
+    expected_requirement_status = {"drafting", "planning", "delivering", "delivered", "deferred", "cancelled"}
     if requirement_status != expected_requirement_status:
         error(
             "hierarchy_state_contract",

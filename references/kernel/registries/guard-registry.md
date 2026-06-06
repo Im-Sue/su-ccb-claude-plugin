@@ -21,8 +21,27 @@
 | **L2: post-condition** | 原语 stage 4（执行后） | 7 | `post_*` |
 | **L3: transition invariant** | 节点 transition 触发 / batch state mutation | 8 | `inv_*` |
 | **L4: PreToolUse hook** | Claude Code 工具调用前（Bash/Edit/Write/AskUserQuestion 等） | 3 | `hook_*` |
+| **L5: capability outcome guard** | `applyCapabilityOutcome` policy 执行前 | 3 | capability policy local id |
 
-**总计 37 条 guard**。后续新增必须在本表注册并增加 ID，不允许在 SKILL.md / manifest / 散文里"隐式约束"。
+**总计 40 条 guard**。后续新增必须在本表注册并增加 ID，不允许在 SKILL.md / manifest / 散文里"隐式约束"。
+
+### `requirement_cancel_terminal_protection`
+- **触发 policy**: `requirement.cancel:cancelled:requirement`
+- **检查条件**: 当前 Requirement 为 `delivered` 时拒绝；当前已为 `cancelled` 时 no-op；其它非终态允许继续。
+- **失败行为**: 返回 `GUARD_FAILED`，不得覆盖已交付 Requirement。
+- **来源**: 913778 取消闭环 pr2。
+
+### `requirement_defer_terminal_protection`
+- **触发 policy**: `requirement.defer:deferred:requirement`
+- **检查条件**: 当前 Requirement 为 `delivered` 或 `cancelled` 时拒绝；当前已为 `deferred` 时 no-op；其它非终态允许继续。
+- **失败行为**: 返回 `GUARD_FAILED`，不得用 defer 覆盖终态。
+- **来源**: 913778 取消闭环 pr2。
+
+### `subtask_cancel_terminal_protection`
+- **触发 policy**: `subtask.cancel:cancelled:subtask`
+- **检查条件**: 当前 dev_task 为 `done` 时拒绝；当前已为 `cancelled` 时 no-op；其它非终态允许继续。
+- **失败行为**: 返回 `GUARD_FAILED`，done 子任务保持 done。
+- **来源**: 913778 取消闭环 pr2。
 
 ---
 

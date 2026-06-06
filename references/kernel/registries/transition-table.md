@@ -495,23 +495,23 @@ v0.3.1 §12.1 警告："多真相源漂移"是节点化最大落地风险。
 
 ### 2.11 Requirement lifecycle Transitions（v0.5.0，Requirement 表）
 
-#### `req__on_analysis_done__draft_to_analyzed`
+#### `req__on_analysis_done__drafting_to_planning`
 - **source_lifecycle**: `requirement`
-- **source_status**: `draft`
-- **target_status**: `analyzed`
+- **source_status**: `drafting`
+- **target_status**: `planning`
 - **trigger**: `on_external_event`
 - **when**: `event_type == 'requirement_analysis_completed'`
 - **guard_refs**: []
 - **state_effects**:
-  - `Requirement.status = 'analyzed'`
+  - `Requirement.status = 'planning'`
 - **rollback_safe**: 是
 
-#### `req__on_first_epic_delivering__analyzed_to_delivering`
+#### `req__on_first_subtask_dispatched__planning_to_delivering`
 - **source_lifecycle**: `requirement`
-- **source_status**: `analyzed`
+- **source_status**: `planning`
 - **target_status**: `delivering`
 - **trigger**: `on_external_event`
-- **when**: `event_type == 'epic_delivering'`
+- **when**: `event_type == 'subtask_dispatched'`
 - **guard_refs**:
   - `inv_parent_existence_guard`
 - **state_effects**:
@@ -583,7 +583,7 @@ v0.3.1 §12.1 警告："多真相源漂移"是节点化最大落地风险。
 | archive | archive__on_complete__to__terminal |
 | `__any__` | __any__to__terminal_via_user_cancel, __any__to__terminal_via_loop_budget_exhausted |
 | epic lifecycle | epic__on_first_subtask_dispatched__planning_to_delivering, epic__on_all_subtasks_archived__delivering_to_delivered, epic__on_subtask_review_fail__delivering_to_planning, epic__on_user_cancel__planning_to_cancelled, epic__on_user_cancel__delivering_to_cancelled |
-| requirement lifecycle | req__on_analysis_done__draft_to_analyzed, req__on_first_epic_delivering__analyzed_to_delivering, req__on_all_epics_delivered__delivering_to_delivered, req__on_user_defer__any_to_deferred, req__on_user_cancel__any_to_cancelled |
+| requirement lifecycle | req__on_analysis_done__drafting_to_planning, req__on_first_subtask_dispatched__planning_to_delivering, req__on_all_epics_delivered__delivering_to_delivered, req__on_user_defer__any_to_deferred, req__on_user_cancel__any_to_cancelled |
 | audit | audit_event__subtask_planning_inherited |
 
 ### 3.2 按 trigger 类型索引

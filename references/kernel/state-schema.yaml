@@ -93,8 +93,8 @@ enums:
   requirement_status:
     description: Requirement 独立表生命周期状态。
     values:
-      - draft
-      - analyzed
+      - drafting
+      - planning
       - delivering
       - delivered
       - deferred

@@ -582,7 +582,7 @@ capabilities:
     display_name: 发布 Requirement 生命周期事件
     category: hierarchy
     criticality: execution_critical
-    description: requirement_analysis 完成后发布 Requirement analyzed/delivering/delivered 生命周期事件。
+    description: requirement_analysis 完成后发布 Requirement planning/delivering/delivered 生命周期事件。
     required_artifacts:
       all_of: [task.requirement_id]
     output_contract:
@@ -616,6 +616,94 @@ capabilities:
         - binding_id: kernel_requirement_promote
           provider: ccb-kernel
           entrypoint: primitive:requirement_promote
+          role: primary
+    degradation:
+      default_action: escalate
+      allowed_fallbacks: []
+      forbidden_policies: []
+
+  - capability_id: requirement.cancel
+    display_name: 取消 Requirement
+    category: hierarchy
+    criticality: execution_critical
+    description: 通过 capability outcome 写 requirement md status=cancelled，并由 su-cancel lib 级联取消子任务、draft 和 worktree。
+    required_artifacts:
+      all_of: [requirement.id, requirement.status]
+    output_contract:
+      produces: [requirement.status]
+      evidence_fields: [requirement.canonical_hash, EventJournal.user_cancel_authorized]
+    provider_bindings:
+      resolution_order: project_override_then_user_then_global
+      candidates:
+        - binding_id: kernel_requirement_cancel
+          provider: ccb-kernel
+          entrypoint: primitive:requirement_cancel
+          role: primary
+    degradation:
+      default_action: escalate
+      allowed_fallbacks: []
+      forbidden_policies: []
+
+  - capability_id: requirement.defer
+    display_name: 暂缓 Requirement
+    category: hierarchy
+    criticality: execution_critical
+    description: 通过 capability outcome 写 requirement md status=deferred，并由 terminal guard 阻止 delivered/cancelled 覆盖。
+    required_artifacts:
+      all_of: [requirement.id, requirement.status]
+    output_contract:
+      produces: [requirement.status]
+      evidence_fields: [requirement.canonical_hash, EventJournal.user_approval]
+    provider_bindings:
+      resolution_order: project_override_then_user_then_global
+      candidates:
+        - binding_id: kernel_requirement_defer
+          provider: ccb-kernel
+          entrypoint: primitive:requirement_defer
+          role: primary
+    degradation:
+      default_action: escalate
+      allowed_fallbacks: []
+      forbidden_policies: []
+
+  - capability_id: requirement.finalize
+    display_name: 交付完成 Requirement
+    category: hierarchy
+    criticality: execution_critical
+    description: 通过 capability outcome 在子任务终态证据满足后写 requirement md status=delivered。
+    required_artifacts:
+      all_of: [requirement.id, requirement.status]
+    output_contract:
+      produces: [requirement.status]
+      evidence_fields: [dev_task.terminal_scope]
+    provider_bindings:
+      resolution_order: project_override_then_user_then_global
+      candidates:
+        - binding_id: kernel_requirement_finalize
+          provider: ccb-kernel
+          entrypoint: primitive:requirement_finalize
+          role: primary
+    degradation:
+      default_action: escalate
+      allowed_fallbacks: []
+      forbidden_policies: []
+
+  - capability_id: subtask.cancel
+    display_name: 取消开发子任务
+    category: hierarchy
+    criticality: execution_critical
+    description: 通过 capability outcome 写 dev_task frontmatter status=cancelled，done 子任务由 terminal guard 保留 done。
+    required_artifacts:
+      all_of: [task.task_id, task.status]
+    output_contract:
+      produces: [task.status]
+      evidence_fields: [dev_task.canonical_hash, EventJournal.user_cancel_authorized]
+    provider_bindings:
+      resolution_order: project_override_then_user_then_global
+      candidates:
+        - binding_id: kernel_subtask_cancel
+          provider: ccb-kernel
+          entrypoint: primitive:subtask_cancel
           role: primary
     degradation:
       default_action: escalate
