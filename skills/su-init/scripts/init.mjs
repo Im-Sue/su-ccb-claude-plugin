@@ -22,7 +22,7 @@ async function main() {
       created_count: summary.created.length,
       skipped_count: summary.skipped.length,
       warnings: summary.warnings,
-      architectureCandidate: summary.architectureCandidate,
+      architectureCandidates: summary.architectureCandidates,
       verification
     })}`
   );
