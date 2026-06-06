@@ -52,17 +52,17 @@ metadata:
    `isRequirementFullyTerminal(requirementId)`，扫描该需求下全部 dev_task，排除
    `status: cancelled` 后确认每个剩余 dev_task 均为
    `status: done + current_node: archive + review_status: passed`，且无未物化的
-   approved follow-up draft。若为真，背靠背执行 `mergeRequirementWorktree()` →
-   `cleanupRequirementWorktree()` → `requirement.finalize` capability outcome（使用
-   `dev_task_requirement_terminal` evidence）写 requirement md `status: delivered`；若为假，
-   不合并、不 finalize，并说明仍未终态的 requirement 内子任务或 follow-up。
+   approved follow-up draft。若为真，只执行 `mergeRequirementWorktree()`，让 worktree
+   runtime 进入 `merged` 并停止；requirement md 必须保持非 delivered（通常为
+   `delivering`），worktree+分支保留给用户预览。不得在 batch 尾部调用
+   `cleanupRequirementWorktree()` 或 `requirement.finalize`。若为假，不合并，并说明仍未终态的
+   requirement 内子任务或 follow-up。
 9. **投影收敛（不依赖 watcher）**：每个子任务归档后、以及 finalize 后，best-effort 主动触发一次 Console 投影刷新（本地 Console 在跑时 `POST /api/projects/<projectId>/scan`），并校验关键投影（子任务 `current_node/status`、需求 `status`）与 canonical 文件一致。WSL2 watcher 会漏文件事件，故不得只依赖它异步跟上；Console 不可达或投影与 canonical 不一致时，明确告知用户需手动 scan，不得在投影未确认收敛时声称"已交付且界面一致"。
 
 使用 helper 时从 plugin lib 引入：
 
 ```js
 import {
-  cleanupRequirementWorktree,
   ensureRequirementWorktree,
   mergeRequirementWorktree
 } from "../../lib/worktree/index.mjs";
@@ -71,9 +71,10 @@ import {
 ## 4. Plugin 独立运行约定
 
 batch 授权写入 EventJournal。`members.task_key` / `execution_order` 是批次执行和审计
-scope 来源；需求收尾以 `isRequirementFullyTerminal(requirementId)` 的全需求扫描为准，并使用
-`dev_task_requirement_terminal` evidence。`members.task_id` 仅用于和 Console/DB 投影做一致性观察。
-后续节点推进仍由 plugin 文件真相源驱动，不调用 Console 业务写入接口。
+scope 来源；需求自动收尾以 `isRequirementFullyTerminal(requirementId)` 的全需求扫描为准，但只做
+merge-only 预览暂停。`dev_task_requirement_terminal` evidence 只在后续
+`/ccb:su-archive requirement_id=<id>` 手动归档时用于 finalize。`members.task_id` 仅用于和
+Console/DB 投影做一致性观察。后续节点推进仍由 plugin 文件真相源驱动，不调用 Console 业务写入接口。
 
 ## 5. 强协商与 sc 要求
 

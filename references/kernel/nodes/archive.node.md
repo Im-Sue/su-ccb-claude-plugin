@@ -13,7 +13,7 @@ status: active
 **触发意图**（满足任一即进入）：
 
 1. Review 已 pass，用户或 AI 需要收尾归档。
-2. 用户说“归档”“结束这个任务”“把结果沉淀一下”。
+2. 用户说“归档”“结束这个任务”“把结果沉淀一下”；若对象是 requirement，则表示手动归档已 merged 的需求。
 3. 子任务完成，需要更新 Requirement rollup。
 4. 批量执行中某个子任务完成且审查通过。
 5. 用户要求生成复盘、经验或下一步建议。
@@ -45,14 +45,24 @@ status: active
 10. 若本次归档后可能已是 requirement 最后一个待归档子任务，AI 必须做一次
    requirement 收尾判断：扫描该 `requirement_id` 下全部 dev_task，排除 `status: cancelled`
    后，确认每个剩余 dev_task 均为 `status: done + current_node: archive +
-   review_status: passed`，且无遗留必须处理事项、无未决 must_ask。满足条件时按需求级
-   生命周期背靠背执行 `mergeRequirementWorktree()` → `cleanupRequirementWorktree()` →
+   review_status: passed`，且无遗留必须处理事项、无未决 must_ask。满足条件时只执行
+   `mergeRequirementWorktree()`，让 runtime state 进入 `merged` 并停止；不得在子任务
+   archive 或 autonomous-batch 尾部执行 cleanup 或 `requirement.finalize`。requirement md
+   必须保持非 delivered（通常为 `delivering`），worktree+分支保留给用户预览。
+   `mergeRequirementWorktree()` 返回 escalation 或 AI 判断不满足时，不得声明 delivered，
+   并说明拒绝原因。
+11. 需求级手动归档（用户明确归档 `requirement_id`）只接受 `merged` 或
+   `archived + requirement 仍非 delivered` 的运行态。`merged` 时执行
+   `cleanupRequirementWorktree()`，成功后重新读取 requirement md 当前 hash，再通过
    `applyCapabilityOutcome()` 声明 `capability_id=requirement.finalize` /
    `outcome_type=delivered`；finalize 调用必须携带 requirement md 的
-   `expectedHash`/`base_hash` 和 `dev_task_requirement_terminal` evidence。任一步返回
-   escalation 或 AI 判断不满足时，不得声明 delivered，并说明拒绝原因。
-11. 记录 EventJournal：archive_started、archive_completed、rollup_updated。
-12. 自然停下或进入下一个已授权节点。
+   `expectedHash`/`base_hash` 和 `dev_task_requirement_terminal` evidence。若 cleanup 已成功但
+   finalize CAS/guard 失败，重入时跳过 cleanup，走 finalize-only recovery。
+12. 显式 reopen 只允许 `merged→ready`，调用 `reopenRequirementWorktree()`；它不改 git 内容，
+   但必须校验 worktree+分支仍在且 worktree clean。成功后 requirement 保持非 delivered，
+   后续返工复用同一实施分支。
+13. 记录 EventJournal：archive_started、archive_completed、rollup_updated。
+14. 自然停下或进入下一个已授权节点。
 
 **深度说明**：
 
@@ -62,7 +72,9 @@ status: active
 
 第 6 点很关键。归档可能涉及公开、删除临时文件、生成后续任务或暴露敏感信息，这些可能命中用户必问清单。
 
-需求级 worktree 收尾必须使用运行态记录的 `target_branch`，绝不 fallback 到 `main`。`mergeRequirementWorktree` 或 `cleanupRequirementWorktree` 返回升级信号时，不得继续声明 delivered 或删除未校验现场；应把缺失分支、dirty preflight、divergence warning 或冲突信息纳入归档阻塞说明。子任务 archive 已经通过 review 时仍可先落 dev_task 终态，但不得因此提前 merge/cleanup per-需求 worktree。
+需求级 worktree merge/cleanup 必须使用运行态记录的 `target_branch`，绝不 fallback 到 `main`。`mergeRequirementWorktree` 或 `cleanupRequirementWorktree` 返回升级信号时，不得继续声明 delivered 或删除未校验现场；应把缺失分支、dirty preflight、divergence warning 或冲突信息纳入归档阻塞说明。子任务 archive 已经通过 review 时仍可先落 dev_task 终态，但不得因此提前 cleanup/finalize per-需求 worktree。
+
+`merged` 是预览暂停态，不是交付终态。Console UI 文案或按钮不得作为唯一真相；真相以 requirement md、dev_task md 和 `docs/.ccb/worktrees/<requirementId>.json` 为准。
 
 ## ③ 什么时候算这个模式完成？
 

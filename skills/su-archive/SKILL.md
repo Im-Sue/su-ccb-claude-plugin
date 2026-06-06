@@ -26,10 +26,15 @@ metadata:
 ```text
 /ccb:su-archive task_id=<subtaskId>
 /ccb:su-archive requirement_id=<requirementId>
+/ccb:su-archive --reopen requirement_id=<requirementId>
 /ccb:su-archive 当前已通过 review 的任务
 ```
 
 可带 `risk_accepted=true`，但只有用户明确授权带风险归档时才可使用。
+
+`task_id` 是子任务归档入口；`requirement_id` 是需求级手动归档入口，用于把已
+`merged` 的 per-需求 worktree 清理并把 requirement finalize 为 `delivered`。
+`--reopen` 是显式返工入口，用于把 `merged` worktree 解冻回 `ready`，复用同一实施分支继续改。
 
 ## 4. Plugin 独立运行约定
 
@@ -39,21 +44,7 @@ metadata:
 2. `docs/03_开发计划/*开发任务.md`
 3. `docs/.ccb/events/journal.jsonl`
 
-归档写 dev_task 终态前必须先调用 worktree helper：
-
-```js
-import { archiveRequirementWorktree } from "../../lib/worktree/index.mjs";
-
-const worktreeArchive = await archiveRequirementWorktree({
-  projectRoot,
-  requirementId,
-  codeWorkspace
-});
-```
-
-`archiveRequirementWorktree` 只 merge 到运行态记录的 `target_branch`，绝不 fallback `main`。若返回 `status: "escalated"`（例如 target 缺失、主仓/工作区 dirty、当前分支不匹配、merge 冲突），必须保留 worktree+分支并停止普通归档，不得继续写 `status: done`。
-
-归档子任务时，任务状态真相写入 dev_task frontmatter。写入终态，例如：
+子任务归档不得调用 worktree merge/cleanup。归档子任务时，只写该 dev_task 终态和归档记录：
 
 ```js
 await writeTaskState({
@@ -72,15 +63,40 @@ await writeTaskState({
 
 归档必须以 `docs/03_开发计划/` 的 dev_task 文档为任务真相；`status/current_node/node_substate/review_status` 只能通过受治理写入更新。
 
-归档子任务后，如果该子任务是 requirement 授权 scope 内最后一个待归档项，必须进入
-AI 判断式 requirement 收尾：以 EventJournal 批量授权事件的 `members.task_key` /
-`execution_order` 为 scope 真相源（DB `Task.requirementId` 只做一致性校验），确认
-scope 全部 dev_task 都是 `status: done`、`current_node: archive` 且 `review_status: passed`，并确认无
-遗留必要工作或未决 must_ask。没有 EventJournal 批量授权事件或等价的显式 task_keys scope 时，不做
-DB fallback、不声明 delivered，必须先报告 scope 不明确。满足时通过
-`applyCapabilityOutcome()` 声明：
+归档子任务后，如果该子任务可能是 requirement 最后一个待归档项，只能做 requirement-wide
+终态判断并调用 `mergeRequirementWorktree()` 进入 `merged` 预览暂停；不得 cleanup 或声明
+`delivered`。需求交付状态必须等用户执行需求级手动归档。
+
+需求级手动归档入口（`/ccb:su-archive requirement_id=<id>`）必须按顺序执行：
+
+1. 读取 requirement md 和 `docs/.ccb/worktrees/<id>.json`，确认 requirement 未
+   `cancelled/deferred` 且 worktree runtime 为 `merged`；若 runtime 已是 `archived` 且
+   requirement 仍未 `delivered`，进入 finalize-only recovery。
+2. runtime 为 `merged` 时调用 `cleanupRequirementWorktree({ projectRoot, requirementId,
+   codeWorkspace })`。返回 `status: "escalated"` 时停止，不得 finalize。
+3. cleanup 成功后重新读取 requirement md 当前 hash，再通过 `applyCapabilityOutcome()` 声明
+   delivered；必须使用 `dev_task_requirement_terminal` evidence 和
+   `requirement_finalize_expected_hash` guard。
+4. 若 cleanup 已成功但 finalize 因 CAS/hash 等失败，后续重入必须识别
+   `archived + requirement 仍非 delivered`，跳过 cleanup，执行 finalize-only recovery。
+
+示例：
 
 ```js
+import { readFile } from "node:fs/promises";
+import { cleanupRequirementWorktree, reopenRequirementWorktree } from "../../lib/worktree/index.mjs";
+import { applyCapabilityOutcome } from "../../lib/capability-outcome/index.mjs";
+import { hashContent } from "../../lib/runtime/index.mjs";
+
+const cleanup = await cleanupRequirementWorktree({
+  projectRoot,
+  requirementId,
+  codeWorkspace
+});
+if (cleanup.status === "escalated") return cleanup;
+
+const requirementContent = await readFile(requirementMarkdownPath, "utf8");
+const requirementMarkdownHash = hashContent(requirementContent);
 await applyCapabilityOutcome({
   projectRoot,
   capabilityId: "requirement.finalize",
@@ -94,23 +110,32 @@ await applyCapabilityOutcome({
   expectedHash: requirementMarkdownHash,
   evidence: [{
     kind: "C",
-    check_id: "dev_task_scope_terminal",
-    params: {
-      requirement_id: requirementId,
-      authorization_event_id: batchAuthorizationEventId,
-      task_keys: taskKeys,
-      dev_task_paths: devTaskPaths
-    }
+    ref: `dev-task-requirement:${requirementId}`,
+    check_id: "dev_task_requirement_terminal",
+    params: { requirement_id: requirementId }
   }]
 });
 ```
 
-如果 scope 未完成、review 未通过、hash 已变、需求已 cancelled/deferred 或 AI 判断仍有
+如果全需求 dev_task 未终态、review 未通过、hash 已变、需求已 cancelled/deferred 或 AI 判断仍有
 必须处理事项，不得声明 delivered；输出拒绝原因。
+
+reopen 入口（`/ccb:su-archive --reopen requirement_id=<id>`）只处理 `merged→ready`：
+
+```js
+await reopenRequirementWorktree({
+  projectRoot,
+  requirementId,
+  codeWorkspace
+});
+```
+
+`reopenRequirementWorktree` 不改 git 内容；它校验 worktree+分支仍存在且 worktree clean。返回
+`status: "escalated"` 时保留现场并报告原因；成功后 requirement 保持非 delivered，后续返工继续复用同一实施分支。
 
 不得调用 Console 业务写入接口改业务状态。Console 只负责展示归档投影。
 
-归档 / finalize 写完 canonical 后，**best-effort 主动触发一次 Console 投影刷新**（本地 Console 在跑时 `POST /api/projects/<projectId>/scan`），并校验投影（子任务 `current_node/status`、需求 `status`）与 canonical 一致，不要只依赖 watcher 异步跟上（WSL2 会漏文件事件）；Console 不可达或投影不一致时，告知用户需手动 scan。
+归档 / merge / finalize / reopen 写完 canonical 后，**best-effort 主动触发一次 Console 投影刷新**（本地 Console 在跑时 `POST /api/projects/<projectId>/scan`），并校验投影（子任务 `current_node/status`、需求 `status`、worktree runtime status）与 canonical 一致，不要只依赖 watcher 异步跟上（WSL2 会漏文件事件）；Console 不可达或投影不一致时，告知用户需手动 scan。Console UI 当前不是手动归档能力的唯一真相源。
 
 ## 5. 强协商与 sc 要求
 
