@@ -54,29 +54,43 @@ node <plugin>/skills/su-init/scripts/init.mjs --project-root <projectRoot>
 
 ### 旧项目架构生成
 
-`initProjectScaffold()` 返回的 `summary.architectureCandidate` 是旧项目架构生成的唯一入口判定。不得在 skill 内复制 eligibility 算法；需要复核时直接从 lib 导入 `detectArchitectureCandidate`。
+`initProjectScaffold()` 返回的 `summary.architectureCandidates` 是旧项目架构生成的唯一入口判定。不得在 skill 内复制候选发现算法；需要复核时直接从 lib 导入 `detectArchitectureCandidates`。
+
+返回字段按 lib 实际接口消费：
+
+- 顶层：`mode`、`reason`、`candidates`、`overviewTargetPath`、`overviewExisting`、`excluded`、`scopeConflicts`、`existingArchitectureDocs`、`capLimit`。
+- 候选：`id`、`path`、`kind`、`disposition`、`confidence`、`evidence`、`targetPath`、`existing`。
 
 处理流程：
 
-1. 先完成 init lib 三步脚手架，再读取 `summary.architectureCandidate`。
-2. 如果 `architectureCandidate.eligible === false`，不得生成架构文档；回执说明跳过原因：
-   - `no_source`：未检测到足够源码。
-   - `multiple_source_roots`：检测到多源码根 / monorepo 信号，需用户手写或指定范围。
-   - `architecture_exists`：`docs/01_架构设计/` 下已有非模板 `.md`，不得覆盖。
-   回执同时带上 lib 返回的 `sourceRoots` / `existingArchitectureDocs`（非空时）。
-3. 如果 `architectureCandidate.eligible === true`，进入 agent 层证据门槛。必须同时满足：
-   - 能拿到项目目录树。
-   - 至少有 1 类 grounding 源：README、依赖 manifest、入口文件。
-   - 至少能填出「概述」「技术栈」「项目结构」「核心模块 / 入口」四块。
-4. 证据门槛不满足时，不生成文件；回执使用 `evidence_insufficient`，说明证据不足、建议手写，并列出缺少哪类证据。
-5. 证据足够时，优先使用 `/sc:analyze` + `/sc:index-repo` 获取结构证据；SC 不可用时，直接读取 README、入口文件、依赖 manifest 和目录树兜底。
-6. 按 `templates/docs/01_架构设计/_模板_架构.md` 的章节结构渲染架构文档，只填有据章节：
-   - 技术栈来自依赖 manifest。
-   - 项目结构来自目录树。
-   - 核心模块来自顶层目录、入口文件和 import 关系，必要时标为 inferred。
-   - 概述来自 README 或等价项目说明。
-7. 推不出的章节直接省略，包括部署拓扑、外部服务、权限模型、关键数据流、历史意图。正文不得写 TODO、待校正、也不得用 hedge 文本代替证据。
-8. 生成文档 frontmatter 只写：
+1. 先完成 init lib 三步脚手架，再读取 `summary.architectureCandidates`。
+2. `mode === "skip"`：不生成架构文档；回执说明 `reason`：
+   - `no_source`：未检测到源码候选。
+   - `architecture_exists`：`docs/01_架构设计/` 下存在无 `architecture_scope` 的非模板 `.md`，保守跳过。
+   同时带上 `existingArchitectureDocs`、`excluded`、`scopeConflicts`（非空时）。
+3. `mode === "single"`：只处理 `candidates` 中 `disposition === "generate"` 的候选。若候选 `existing === true`，终态记 `existing`，不写文件；否则进入候选证据门槛，通过后按候选 `targetPath` 生成一份子架构文档。
+4. `mode === "layered"`：按候选 `id` 字典序逐个处理。每个 `disposition === "generate"` 且未 existing 的候选独立走证据门槛；不足则终态记 `evidence_insufficient` 并继续其余候选；全部子架构处理完后再生成总架构。
+5. `mode === "overview_only"`：不生成子架构；仅按 `overviewTargetPath` 生成总架构，内容包含全部候选清单、`excluded`、`scopeConflicts` 和点名补生成提示。若 `overviewExisting === true`，总架构终态记 `existing`，不得覆盖。
+6. `kind === "submodule"` 的候选终态记 `submodule`，只进入总架构清单，不生成子架构；`disposition === "list_only"` 的非 submodule 候选终态记 `list_only`。
+7. `excluded` 单独进入回执：`framework_shell_merged` 映射为 `shell_merged`，`root_aggregator` 映射为 `aggregator_excluded`；其它 excluded reason 原样列在 excluded 摘要里。
+
+候选证据门槛：
+
+1. 以候选 `path` 为源码根收集证据，不把其它候选目录的证据混入本候选。
+2. 必须拿到候选目录树。
+3. 必须至少有 1 类 grounding 源：README、依赖 manifest、入口文件、候选 `evidence` 指向的运行/部署/入口证据、或 SC 结构分析结果。
+4. 必须至少能填出「概述」「技术栈」「项目结构」「核心模块 / 入口」四块。
+5. 证据不足时不写该候选文件；终态记 `evidence_insufficient`，回执列缺少哪类证据并建议用户手写或点名补充。
+6. 证据足够时，优先使用 `/sc:analyze` + `/sc:index-repo` 获取结构证据；SC 不可用时，直接读取 README、入口文件、依赖 manifest、候选 `evidence` 和目录树兜底。
+
+子架构渲染：
+
+1. 按 `templates/docs/01_架构设计/_模板_架构.md` 的章节结构渲染，只填有据章节。
+2. 技术栈来自依赖 manifest；项目结构来自目录树；核心模块来自顶层目录、入口文件和 import 关系；概述来自 README 或等价项目说明。
+3. 推不出的章节直接省略，包括部署拓扑、外部服务、权限模型、历史意图。正文不得写 TODO、待校正、也不得用 hedge 文本代替证据。
+4. 子架构的「覆盖范围 / 不覆盖」必须写清候选 `path`，并在 layered 模式下指向总架构。
+
+scope frontmatter 必须写单行 inline list：
 
 ```yaml
 ---
@@ -84,31 +98,70 @@ doc_type: architecture
 updated: YYYY-MM-DD
 generated_by: su-init-ai
 human_verified: false
+architecture_scope: <子系统 slug>
+scope_source_roots: ["apps/web", "src-tauri"]
 ---
 ```
 
+总架构固定使用：
+
+```yaml
+---
+doc_type: architecture
+updated: YYYY-MM-DD
+generated_by: su-init-ai
+human_verified: false
+architecture_scope: overview
+scope_source_roots: ["."]
+---
+```
+
+`architecture_scope: 子系统 slug;系统总架构固定为 overview。`
+`scope_source_roots: 仓库相对路径数组,必须写单行 inline list,如 ["apps/web", "src-tauri"]。`
+`不要写多行 YAML 数组,行级 parser 会 partial。`
+
 不得写 `status` 字段，不得生成 02_需求、04_模块规格等其它文档。
+
+总架构固定渲染 profile：
+
+1. 只填 `_模板_架构.md` 的固定章节：一、二、五、六、十一。
+2. 一「概述与定位」写系统全景和本次候选发现边界。
+3. 二「整体结构」写子系统框图，只画有证据的连线。
+4. 五「核心模块」必须是全部候选清单表，列：子系统、路径、职责、置信度、状态、文档链接。
+5. 六「关键流程」只写可证实关联：import 方向、HTTP client 指向、配置引用。推不出时写「未推断」。
+6. 十一「相关文档」只链接本轮实际写成功或已存在的子架构；不得链接失败、跳过或未写的目标。
+7. 不得编造子系统关联；总架构可列候选事实和缺口，但不能把推测关系写成事实。
 
 写盘纪律：
 
 1. 写盘前必须二次检测：
 
 ```js
-import { detectArchitectureCandidate } from "../../lib/su-init/index.mjs";
+import { detectArchitectureCandidates } from "../../lib/su-init/index.mjs";
 
-const latest = await detectArchitectureCandidate({ projectRoot });
+const latest = await detectArchitectureCandidates({ projectRoot });
 ```
 
-2. 若 `latest.eligible !== true`，按最新 `reason` 跳过并回执，不写文件。
-3. 若仍 eligible，只能写 `latest.targetPath`。目标路径是项目内相对路径，写盘时拼到 `projectRoot` 下。
-4. 必须使用 final path 独占创建，例如：
+2. 二次检测只因新增「无 `architecture_scope` 的非模板架构 md」中止；本轮已写入的 scoped 文档会在后续检测中表现为 `existing`，不算形状变化。
+3. 子架构先写，按候选 `id` 字典序逐个 final-path 写入；总架构最后写。
+4. 每个文件只能写 lib 返回的 `targetPath` 或 `overviewTargetPath`。目标路径是项目内相对路径，写盘时拼到 `projectRoot` 下。
+5. 必须使用 final path 独占创建，例如：
 
 ```js
 await writeFile(targetPath, content, { encoding: "utf8", flag: "wx" });
 ```
 
 或等价的 `open(targetPath, "wx")`。禁止使用 `safeWriteFile` 或任何 temp + rename helper，因为 final rename 可能覆盖竞态文件。
-5. 如果写盘返回 `EEXIST`，放弃生成并回执提示目标文件已存在，不得覆盖或重试改名。
+6. 如果单文件写盘返回 `EEXIST` 或失败，该文件终态记 `skipped` 并说明原因，继续其余候选；不得覆盖、不得重试改名。
+7. 若补写了新子架构但 `overviewExisting === true`，不得改旧总架构；回执必须提示总架构可能缺少新链接，建议用户对话补改。
+
+回执契约：
+
+1. 每个候选必须给终态：`generated`、`existing`、`evidence_insufficient`、`list_only`、`submodule`、`shell_merged`、`aggregator_excluded`。
+2. 总架构状态只用：`generated`、`existing`；未尝试生成时说明原因。
+3. 生成时醒目标明「AI 生成、建议 review、要改直接对话」，列出写入路径和 evidence sources 摘要（目录树、README、manifest、入口文件、候选 evidence、SC 结果等实际使用项）。
+4. 跳过时列出 `mode`、`reason`、`existingArchitectureDocs`、`scopeConflicts`、`excluded`（非空时）。
+5. `overview_only` 必须列全部候选和点名补生成指引；超出 `capLimit` 时说明本轮只生成总架构。
 
 ## 4. Plugin 独立运行约定
 
@@ -147,5 +200,7 @@ sc 不可用时，说明替代扫描方式。
 
 若触发旧项目架构生成流程，回执还必须包含：
 
-- 生成时：醒目标明「AI 生成、建议 review、要改直接对话」，列出写入路径和 evidence sources 摘要（目录树、README、manifest、入口文件、SC 结果等实际使用项）。
-- 跳过时：列出跳过原因。eligibility 失败使用 `architectureCandidate.reason`，并带上 `sourceRoots` / `existingArchitectureDocs`（非空时）；证据不足使用 `evidence_insufficient` 并列缺少哪类证据；目标文件竞态存在时说明 `EEXIST` / 已存在且未覆盖。
+- 生成时：醒目标明「AI 生成、建议 review、要改直接对话」，列出子架构路径、总架构路径和 evidence sources 摘要（目录树、README、manifest、入口文件、候选 evidence、SC 结果等实际使用项）。
+- 跳过时：列出 `architectureCandidates.mode` / `reason`，并带上 `existingArchitectureDocs`、`scopeConflicts`、`excluded`（非空时）。
+- 分层处理时：逐候选列出 `id`、`path`、`kind`、`disposition`、`confidence`、终态和文档路径；证据不足使用 `evidence_insufficient` 并列缺少哪类证据；目标文件竞态存在时说明 `EEXIST` / 已存在且未覆盖。
+- `overview_only` 时：列全部候选、总架构状态、超限或全 list-only 原因，以及可点名补生成的候选 `id`。
