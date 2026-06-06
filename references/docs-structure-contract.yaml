@@ -25,6 +25,9 @@ human_docs:
       doc_types: [architecture]
       template: _模板_架构.md
       split_by_part: true             # 多独立项目 → 前端架构/后端架构/后台管理架构 + 系统总架构
+      # scope frontmatter(可选):architecture_scope 为子系统 slug 或 "overview"。
+      # scope frontmatter(可选):scope_source_roots 为仓库相对路径数组,必须写单行 inline list,如 ["apps/web", "src-tauri"]。
+      # scope frontmatter(可选):su-init 分层生成会写入;人工手写架构可标注以参与补缺判断。
     - path: "02_需求设计/"
       doc_type: requirement
       template: _模板_需求.md
