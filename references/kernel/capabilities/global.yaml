@@ -601,10 +601,10 @@ capabilities:
       forbidden_policies: []
 
   - capability_id: requirement.promote
-    display_name: 晋升 Requirement 到 planning
+    display_name: 晋升 Requirement 生命周期状态
     category: hierarchy
     criticality: execution_critical
-    description: 绑定 slot 或执行需求分析后,通过 capability outcome forward-only 写 requirement md status=planning。
+    description: 绑定 slot、执行需求分析或首个子任务派发后,通过 capability outcome forward-only 写 requirement md status=planning/delivering。
     required_artifacts:
       all_of: [requirement.id, requirement.status]
     output_contract:
