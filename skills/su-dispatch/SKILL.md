@@ -82,7 +82,9 @@ await ensureRequirementWorktree({
 });
 ```
 
-`ensureRequirementWorktree` 是幂等前置动作：首次物理创建 `../SU-CCB-req-<reqId>`，重复派工 no-op，并把 `confirmed_target_branch` / `base_sha` 写入 canonicalRoot 的 `docs/.ccb` 运行态。确保完成后才提交 `ccb ask`；不要让 Codex 自建 worktree。
+`ensureRequirementWorktree` 是幂等前置动作：首次按项目拓扑展开该需求名下全部实施空间，零拓扑声明时退化为单 root 空间 `../SU-CCB-req-<reqId>`；重复派工 no-op。helper 会把每个空间的 `target_branch` / `base_sha` 写入 canonicalRoot 的 `docs/.ccb/worktrees/<reqId>.json`，只有 `aggregate_status=ready` 才能提交 `ccb ask`；不要让 Codex 自建 worktree。
+
+派工 brief 必须从 `docs/.ccb/worktrees/<reqId>.json` 附运行态空间表，至少包含 `space_id`、`repo`、`path`、`branch`、`target_branch`。单空间时也按同一表述给出 root 空间，避免执行者依赖旧的隐含单 worktree 规则。
 
 ## 4. Plugin 独立运行约定
 
