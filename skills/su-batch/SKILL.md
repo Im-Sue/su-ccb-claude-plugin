@@ -52,9 +52,9 @@ metadata:
    `isRequirementFullyTerminal(requirementId)`，扫描该需求下全部 dev_task，排除
    `status: cancelled` 后确认每个剩余 dev_task 均为
    `status: done + current_node: archive + review_status: passed`，且无未物化的
-   approved follow-up draft。若为真，只执行 `mergeRequirementWorktree()`，让 worktree
-   runtime 进入 `merged` 并停止；requirement md 必须保持非 delivered（通常为
-   `delivering`），worktree+分支保留给用户预览。不得在 batch 尾部调用
+   approved follow-up draft。若为真，只执行 `mergeRequirementWorktree()`，让该需求全部
+   implementation spaces 及其 associations 的 runtime 进入 `merged` 并停止；requirement md 必须保持非 delivered（通常为
+   `delivering`），各 worktree+分支保留给用户预览。不得在 batch 尾部调用
    `cleanupRequirementWorktree()` 或 `requirement.finalize`。若为假，不合并，并说明仍未终态的
    requirement 内子任务或 follow-up。
 9. **投影收敛（不依赖 watcher）**：每个子任务归档后、以及 finalize 后，best-effort 主动触发一次 Console 投影刷新（本地 Console 在跑时 `POST /api/projects/<projectId>/scan`），并校验关键投影（子任务 `current_node/status`、需求 `status`）与 canonical 文件一致。WSL2 watcher 会漏文件事件，故不得只依赖它异步跟上；Console 不可达或投影与 canonical 不一致时，明确告知用户需手动 scan，不得在投影未确认收敛时声称"已交付且界面一致"。

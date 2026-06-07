@@ -70,15 +70,18 @@ await writeTaskState({
 需求级手动归档入口（`/ccb:su-archive requirement_id=<id>`）必须按顺序执行：
 
 1. 读取 requirement md 和 `docs/.ccb/worktrees/<id>.json`，确认 requirement 未
-   `cancelled/deferred` 且 worktree runtime 为 `merged`；若 runtime 已是 `archived` 且
+   `cancelled/deferred` 且 worktree runtime aggregate 为 `merged`；若 runtime aggregate 已是 `archived` 且
    requirement 仍未 `delivered`，进入 finalize-only recovery。
-2. runtime 为 `merged` 时调用 `cleanupRequirementWorktree({ projectRoot, requirementId,
-   codeWorkspace })`。返回 `status: "escalated"` 时停止，不得 finalize。
+2. runtime aggregate 为 `merged` 时调用 `cleanupRequirementWorktree({ projectRoot, requirementId,
+   codeWorkspace })`。cleanup 按 implementation spaces 声明序逐空间执行；若返回
+   `status: "escalated"`，保留已成功 archived 的空间事实并停止，不得 finalize。仅
+   `aggregate=merged`、`aggregate=escalated && last_error.op=="cleanup"` 或已 `archived`
+   可进入 cleanup。
 3. cleanup 成功后重新读取 requirement md 当前 hash，再通过 `applyCapabilityOutcome()` 声明
    delivered；必须使用 `dev_task_requirement_terminal` evidence 和
    `requirement_finalize_expected_hash` guard。
 4. 若 cleanup 已成功但 finalize 因 CAS/hash 等失败，后续重入必须识别
-   `archived + requirement 仍非 delivered`，跳过 cleanup，执行 finalize-only recovery。
+   `aggregate=archived + requirement 仍非 delivered`，跳过 cleanup，执行 finalize-only recovery。
 
 示例：
 
@@ -130,8 +133,10 @@ await reopenRequirementWorktree({
 });
 ```
 
-`reopenRequirementWorktree` 不改 git 内容；它校验 worktree+分支仍存在且 worktree clean。返回
-`status: "escalated"` 时保留现场并报告原因；成功后 requirement 保持非 delivered，后续返工继续复用同一实施分支。
+`reopenRequirementWorktree` 不改 git 内容；它仅允许 `aggregate=merged`，并校验全部
+implementation spaces 的 worktree+分支仍存在且 clean（单空间即 worktree+分支仍存在且 worktree clean）。任一空间失败时 all-or-nothing
+返回 `status: "escalated"`、保留 runtime 不写并报告原因；成功后全部空间回到 `ready`，
+associations 重置为 pending，requirement 保持非 delivered，后续返工继续复用实施分支。
 
 不得调用 Console 业务写入接口改业务状态。Console 只负责展示归档投影。
 
