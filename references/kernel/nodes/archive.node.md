@@ -36,7 +36,7 @@ status: active
 4. 找 Codex 协商归档是否完整，尤其检查是否遗漏风险或后续事项。
 5. 写 4 段反思，明确归档内容是否被修订。
 6. 处理命中的必问项：例如是否公开报告、是否触发后续任务、是否保留敏感信息。
-7. 子任务归档只写 dev_task 终态和归档记录，不调用 worktree merge/cleanup；per-需求 worktree 必须保留到该需求全部非 cancelled dev_task 终态之后再由需求级收尾处理。
+7. 子任务归档只写 dev_task 终态和归档记录，不调用实施空间 merge/cleanup；per-需求实施空间必须保留到该需求全部非 cancelled dev_task 终态之后再由需求级收尾处理。
 8. 写归档记录：完成内容、验证证据、风险、后续建议。
 9. 更新 Requirement / DeliveryUnit 的完成投影文件。子任务归档时必须让
    `docs/03_开发计划/` 的 dev_task frontmatter 至少包含：
@@ -46,9 +46,9 @@ status: active
    requirement 收尾判断：扫描该 `requirement_id` 下全部 dev_task，排除 `status: cancelled`
    后，确认每个剩余 dev_task 均为 `status: done + current_node: archive +
    review_status: passed`，且无遗留必须处理事项、无未决 must_ask。满足条件时只执行
-   `mergeRequirementWorktree()`，让 runtime state 进入 `merged` 并停止；不得在子任务
+   `mergeRequirementWorktree()`，将该需求名下全部实施空间各自合并回各自运行态记录的源分支，并按项目声明同步空间间关联；整体 runtime state 进入 `merged` 并停止；不得在子任务
    archive 或 autonomous-batch 尾部执行 cleanup 或 `requirement.finalize`。requirement md
-   必须保持非 delivered（通常为 `delivering`），worktree+分支保留给用户预览。
+   必须保持非 delivered（通常为 `delivering`），实施空间与分支保留给用户预览。
    `mergeRequirementWorktree()` 返回 escalation 或 AI 判断不满足时，不得声明 delivered，
    并说明拒绝原因。
 11. 需求级手动归档（用户明确归档 `requirement_id`）只接受 `merged` 或
@@ -59,7 +59,7 @@ status: active
    `expectedHash`/`base_hash` 和 `dev_task_requirement_terminal` evidence。若 cleanup 已成功但
    finalize CAS/guard 失败，重入时跳过 cleanup，走 finalize-only recovery。
 12. 显式 reopen 只允许 `merged→ready`，调用 `reopenRequirementWorktree()`；它不改 git 内容，
-   但必须校验 worktree+分支仍在且 worktree clean。成功后 requirement 保持非 delivered，
+   但必须以 requirement 级 all-or-nothing 校验全部实施空间与分支仍在且 clean。成功后 requirement 保持非 delivered，
    后续返工复用同一实施分支。
 13. 记录 EventJournal：archive_started、archive_completed、rollup_updated。
 14. 自然停下或进入下一个已授权节点。
@@ -72,7 +72,7 @@ status: active
 
 第 6 点很关键。归档可能涉及公开、删除临时文件、生成后续任务或暴露敏感信息，这些可能命中用户必问清单。
 
-需求级 worktree merge/cleanup 必须使用运行态记录的 `target_branch`，绝不 fallback 到 `main`。`mergeRequirementWorktree` 或 `cleanupRequirementWorktree` 返回升级信号时，不得继续声明 delivered 或删除未校验现场；应把缺失分支、dirty preflight、divergence warning 或冲突信息纳入归档阻塞说明。子任务 archive 已经通过 review 时仍可先落 dev_task 终态，但不得因此提前 cleanup/finalize per-需求 worktree。
+需求级实施空间 merge/cleanup 必须使用各空间运行态记录的 `target_branch`，绝不 fallback 到 `main`，也不跨空间继承。`mergeRequirementWorktree` 或 `cleanupRequirementWorktree` 返回升级信号时，不得继续声明 delivered 或删除未校验现场；应把缺失分支、dirty preflight、divergence warning 或冲突信息纳入归档阻塞说明。子任务 archive 已经通过 review 时仍可先落 dev_task 终态，但不得因此提前 cleanup/finalize per-需求实施空间。
 
 `merged` 是预览暂停态，不是交付终态。Console UI 文案或按钮不得作为唯一真相；真相以 requirement md、dev_task md 和 `docs/.ccb/worktrees/<requirementId>.json` 为准。
 

@@ -37,7 +37,7 @@ status: active
 5. 找 Codex 协商，让 Codex 从执行者视角指出不清楚或不可执行之处。
 6. 写 4 段反思，并修订 brief。
 7. 扫描必问项：owner、优先级、风险授权、公共 API 或依赖变更。
-8. 派工提交前读取 dev_task 的 `code_workspace`，在 canonicalRoot（主仓）调用 `ensureRequirementWorktree`；该调用必须发生在 `ccb ask` 之前，且可重复幂等执行。
+8. 派工提交前读取 dev_task 的 `code_workspace`，在 canonicalRoot（主仓）调用 `ensureRequirementWorktree` 展开并就绪该需求名下全部实施空间（按项目机器可读声明展开；无声明时为单一主空间）；该调用必须发生在 `ccb ask` 之前，且可重复幂等执行。
 9. 通过 ccbd/ask 路径提交给目标 agent，或写入可执行派工文件等待提交。
 10. 记录 dispatch_submitted、dispatch_failed 或 dispatch_deferred。
 11. 给用户展示派工摘要和可追踪 id。
@@ -50,7 +50,7 @@ status: active
 
 第 9 点不等于 Console 驱动业务。Console 可以提供按钮触发 dispatch，但指令语义和业务 brief 由 plugin 生成。
 
-per-需求 worktree 是 dispatch 前置生命周期动作，不是 Codex 执行细节。dispatch 侧只负责 `ensureRequirementWorktree({ projectRoot: canonicalRoot, requirementId, codeWorkspace })`；Codex 只消费已建好的 codeRoot，字段缺失、路径不存在或分支不匹配时应拒绝实施。
+per-需求实施空间是 dispatch 前置生命周期动作，不是 Codex 执行细节。dispatch 侧只负责 `ensureRequirementWorktree({ projectRoot: canonicalRoot, requirementId, codeWorkspace })`，并在全部空间就绪后提交 ask；dispatch brief 应附运行态空间表，Codex 只消费已建好的 codeRoot/空间表，字段缺失、路径不存在或分支不匹配时应拒绝实施。
 
 ## ③ 什么时候算这个模式完成？
 

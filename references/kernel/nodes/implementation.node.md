@@ -32,7 +32,7 @@ status: active
 
 1. 读取 dispatch brief、spec、禁止事项和回执要求。
 2. 检查当前工作区状态，识别已有用户改动。
-3. 读取 dev_task 的 `code_workspace`，区分 `canonicalRoot` 和 `codeRoot`：`canonicalRoot` 是主仓，专用于读取人读 docs 和经 plugin lib 写 `docs/.ccb`；`codeRoot = resolve(canonicalRoot, code_workspace.path)`，专用于代码改动、git、测试和构建。
+3. 读取 dev_task 的 `code_workspace` 与 dispatch brief 空间表，区分 `canonicalRoot` 和 `codeRoot`：`canonicalRoot` 是主仓，专用于读取人读 docs 和经 plugin lib 写 `docs/.ccb`；主空间的 `codeRoot = resolve(canonicalRoot, code_workspace.path)`，专用于代码改动、git、测试和构建。若该需求声明多个实施空间，按 brief 空间表分别使用各空间自己的 codeRoot。
 4. 使用推荐 sc 指令理解代码结构和实施风险。
 5. 找 Codex/Claude 协商实施理解，即使需求很小也要做最小协商。
 6. 制定实施顺序：先高风险接口，再局部实现，再验证。
@@ -46,7 +46,7 @@ status: active
 
 第 2 点保护用户工作区。你不能假设所有 dirty diff 都是你的；必须识别哪些是已有改动，并在实现中避开或兼容。
 
-per-需求 worktree 下，实施节点不负责创建或删除 worktree。dispatch 已确保 codeRoot 存在；实施只消费它。所有代码命令必须以 codeRoot 为 cwd 或使用 `git -C codeRoot`，而 canonical 读写仍以主仓绝对路径为准，避免把 `docs/.ccb` 写进 worktree。
+per-需求实施空间下，实施节点不负责创建或删除空间。dispatch 已确保 codeRoot/空间表存在；实施只消费它们。所有代码命令必须以对应空间的 codeRoot 为 cwd 或使用 `git -C codeRoot`，跨空间改动不得混在同一个 git 工作区提交；canonical 读写仍以主仓绝对路径为准，避免把 `docs/.ccb` 写进实施空间。
 
 第 5 点在 v1.x 是强制训练。即使是变量改名，也要让另一个 agent 检查是否有公共概念、用户术语或 API 影响。
 
