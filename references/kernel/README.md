@@ -15,6 +15,7 @@ updated_at: 2026-05-21
 |---|---|
 | `glossary.md` | 术语小词典，防止用户和 AI 因术语理解不同而漂移 |
 | `must-ask-checklist.md` | 12 类必须问用户的事项、PoC 放宽边界和命中判定 |
+| `document-expression-spec.md` | 落档表达规范：R1-R6 规则、doc_type 应用矩阵、豁免语义；分析/设计/拆分落档前消费 |
 | `nodes/*.node.md` | 7 个业务节点的新 Markdown manifest |
 | `decision-card-schema.yaml` | v1.5+ Decision Card 结构化 schema 占位 |
 | `agent-reply-reviewed-schema.yaml` | v1.5+ agent reply reflection schema 占位 |
