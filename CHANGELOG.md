@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.1.0 - 2026-06-08
+
+CCB v1.1 — multispace worktree 运行时 + su-init 分层架构生成 + 文档表达规范 v1。
+
+### Added
+- Multispace worktree 运行时：多空间（含 submodule）需求的 worktree 编排——`expand requirement spaces on ensure` / `orchestrate multispace closeout` / multispace runtime data layer / sync submodule gitlinks。
+- `su-init` 分层架构生成：检测架构候选、architecture scope metadata、layered architecture 生成流程。
+- `document-expression-spec` v1：文档表达规范 + 4 个 node manifest 接入。
+
+### Changed
+- Requirement archive 生命周期拆分：merged 与手动 archive 分离，merged requirement 暂停等待人工归档。
+- 拍板项闭环规则修订（kernel / 模板 / SKILL / 闸门）——对话闭环后才落档。
+
+### Fixed
+- worktree submodule 清理失败处理；plugin cancel 流程加固。
+
 ## v1.0.0 - 2026-05-22
 
 CCB v1.0 plugin sovereignty 正式发布。Plugin 是主系统，Console 是可选 UI。
