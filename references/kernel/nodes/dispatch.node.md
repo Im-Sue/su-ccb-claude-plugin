@@ -41,10 +41,11 @@ status: active
 9. 通过 ccbd/ask 路径提交给目标 agent，或写入可执行派工文件等待提交。
 10. 记录 dispatch_submitted、dispatch_failed 或 dispatch_deferred。
 11. 给用户展示派工摘要和可追踪 id。
+12. 提交派工前执行拍板项扫描约定 v1；在手文件 = 当前 dev_task spec + 绑定 requirement。
 
 **深度说明**：
 
-第 2 点是派工质量闸。如果 spec 仍有 TBD，不能靠执行 agent 自己猜。应退回 task_breakdown 或 technical_design，而不是把歧义下放。
+第 2 点是派工质量闸。如果当前 dev_task spec 或绑定 requirement 仍有 TBD、未闭环待用户拍板项，不能靠执行 agent 自己猜。应退回 task_breakdown、technical_design 或 requirement_analysis，而不是把歧义下放。
 
 第 5 点的协商很重要。Codex 最知道什么 brief 会让执行时卡住；如果 Codex 说“文件范围不清楚”或“验收命令不可用”，你必须修 brief。
 
@@ -52,12 +53,24 @@ status: active
 
 per-需求实施空间是 dispatch 前置生命周期动作，不是 Codex 执行细节。dispatch 侧只负责 `ensureRequirementWorktree({ projectRoot: canonicalRoot, requirementId, codeWorkspace })`，并在全部空间就绪后提交 ask；dispatch brief 应附运行态空间表，Codex 只消费已建好的 codeRoot/空间表，字段缺失、路径不存在或分支不匹配时应拒绝实施。
 
+**拍板项扫描约定 v1**：
+
+<!-- PAIBAN-SCAN-CONVENTION v1 START -->
+放行前对「本节点在手文件」（各节点的"在手文件"定义见所在 manifest）执行【拍板项扫描约定 v1】：对在手文件运行 §钉死物件 2 的 rg pattern；命中处逐一人工裁决，归入三类之一才放行：① 已闭环拍板记录（含答案与理由）；② 非用户项（纯技术 / 中性词误命中）；③ 已显式移交下一节点的技术项。任一命中无法归类即阻塞，回对应节点在终端问到答案。机器辅助定位、人工裁决语义，不做语义硬判。
+<!-- PAIBAN-SCAN-CONVENTION v1 END -->
+
+扫描 pattern：
+
+```text
+待用户|待谁定|TBD|TODO|后续确认|待(确认|拍板|定|澄清|商榷|评估|回复|补充|明确|决)|未(定|决|确认|澄清|明确)|尚未(确定|明确|拍板|确认)|仍需(用户)?确认|需(用户)?(确认|拍板|澄清|回复|补充|明确|决策|授权)|等待用户(确认|拍板|裁决|仲裁|回复)
+```
+
 ## ③ 什么时候算这个模式完成？
 
 **必须同时满足**：
 
 1. dispatch brief 已写清目标、范围、边界、验收和回执格式。
-2. 所有命中的必问项已处理。
+2. 所有命中的必问项已处理，且在手文件不存在未闭环待用户拍板项。
 3. 至少 1 轮 Codex 协商完成，且已根据反馈修订 brief 或说明不采纳理由。
 4. 4 段反思已记录。
 5. 派工已提交、或明确因阻塞而 deferred。
@@ -77,7 +90,7 @@ per-需求实施空间是 dispatch 前置生命周期动作，不是 Codex 执�
 **绝对禁止**：
 
 1. 用一句“请实现这个 spec”替代 dispatch brief。
-2. 把未澄清的需求派给执行 agent。
+2. 把未澄清的需求或未闭环待用户拍板项派给执行 agent。
 3. 不说明禁止范围，让执行 agent 顺手重构。
 4. 跳过 Codex 协商。
 5. 未问用户就改变 owner、优先级或风险范围。

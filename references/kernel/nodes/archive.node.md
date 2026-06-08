@@ -61,8 +61,9 @@ status: active
 12. 显式 reopen 只允许 `merged→ready`，调用 `reopenRequirementWorktree()`；它不改 git 内容，
    但必须以 requirement 级 all-or-nothing 校验全部实施空间与分支仍在且 clean。成功后 requirement 保持非 delivered，
    后续返工复用同一实施分支。
-13. 记录 EventJournal：archive_started、archive_completed、rollup_updated。
-14. 自然停下或进入下一个已授权节点。
+13. 归档写入前执行拍板项扫描约定 v1；在手文件 = 本次归档 dev_task + requirement 收尾文档。
+14. 记录 EventJournal：archive_started、archive_completed、rollup_updated。
+15. 自然停下或进入下一个已授权节点。
 
 **深度说明**：
 
@@ -76,13 +77,25 @@ status: active
 
 `merged` 是预览暂停态，不是交付终态。Console UI 文案或按钮不得作为唯一真相；真相以 requirement md、dev_task md 和 `docs/.ccb/worktrees/<requirementId>.json` 为准。
 
+**拍板项扫描约定 v1**：
+
+<!-- PAIBAN-SCAN-CONVENTION v1 START -->
+放行前对「本节点在手文件」（各节点的"在手文件"定义见所在 manifest）执行【拍板项扫描约定 v1】：对在手文件运行 §钉死物件 2 的 rg pattern；命中处逐一人工裁决，归入三类之一才放行：① 已闭环拍板记录（含答案与理由）；② 非用户项（纯技术 / 中性词误命中）；③ 已显式移交下一节点的技术项。任一命中无法归类即阻塞，回对应节点在终端问到答案。机器辅助定位、人工裁决语义，不做语义硬判。
+<!-- PAIBAN-SCAN-CONVENTION v1 END -->
+
+扫描 pattern：
+
+```text
+待用户|待谁定|TBD|TODO|后续确认|待(确认|拍板|定|澄清|商榷|评估|回复|补充|明确|决)|未(定|决|确认|澄清|明确)|尚未(确定|明确|拍板|确认)|仍需(用户)?确认|需(用户)?(确认|拍板|澄清|回复|补充|明确|决策|授权)|等待用户(确认|拍板|裁决|仲裁|回复)
+```
+
 ## ③ 什么时候算这个模式完成？
 
 **必须同时满足**：
 
 1. Review 已 pass，或用户明确授权带风险归档。
 2. 归档记录已写入 dev_task 文档、EventJournal，必要时沉淀到 `docs/05_经验沉淀/` 或项目约定位置。
-3. 所有命中的必问项已处理。
+3. 所有命中的必问项已处理，且在手文件不存在未闭环待用户拍板项。
 4. 至少 1 轮协商和 1 段 4 锚点反思已记录。
 5. 完成内容、验证证据、风险和后续事项都可追溯。
 6. Requirement / DeliveryUnit 状态投影已写入 plugin 真相源。
@@ -204,16 +217,17 @@ Done.
 15. 我是否避免删除用户文件或证据？
 16. 我是否避免把敏感数据写入公开报告？
 17. 我是否扫描了公开、删除、后续任务等必问项？
-18. 我是否更新了 Requirement 或 DeliveryUnit 投影文件？
-19. 若是 scope 内最后一个子任务，我是否用 AI 判断式 `requirement.finalize`
+18. 我是否按拍板项扫描约定 v1 扫描本次归档在手文件，并逐一裁决命中？
+19. 我是否更新了 Requirement 或 DeliveryUnit 投影文件？
+20. 若是 scope 内最后一个子任务，我是否用 AI 判断式 `requirement.finalize`
     outcome 完成或明确拒绝 requirement delivered 声明？
-20. 我是否记录 archive_started？
-21. 我是否记录 archive_completed？
-22. 我是否没有修改历史 archive 来美化结果？
-23. 我是否说明了是否继续下一个 DeliveryUnit？
-24. 用户未来能否通过归档理解任务背景？
-25. 新 agent 接手时能否从归档恢复上下文？
-26. 归档是否诚实呈现了未验证风险？
+21. 我是否记录 archive_started？
+22. 我是否记录 archive_completed？
+23. 我是否没有修改历史 archive 来美化结果？
+24. 我是否说明了是否继续下一个 DeliveryUnit？
+25. 用户未来能否通过归档理解任务背景？
+26. 新 agent 接手时能否从归档恢复上下文？
+27. 归档是否诚实呈现了未验证风险？
 
 **常见打回原因**：
 

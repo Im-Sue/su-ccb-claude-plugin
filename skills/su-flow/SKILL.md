@@ -80,7 +80,7 @@ await promoteRequirementToPlanning({ projectRoot, requirementId });
 
 该调用通过 `requirement.promote:planning` capability outcome 写 canonical requirement md，幂等 key 由 `<requirementId>:<baseHash>` 派生；`planning` 会 no-op，`delivering` / `delivered` / `deferred` / `cancelled` 或 hash 冲突会被 guard 拒绝。拒绝时不得手写 `status`，记录返回的 `code` / `issues`，再按节点 manifest 判断继续、停止或升级用户。
 
-`analysisFile` 必须是 JSON，字段为非空字符串：`claudeInterpretation`、`ambiguities`、`fidelityDiff`；可选字段 `bodyMarkdown` 为字符串，用于按需求模板主体产出二~十三章（复杂度自适应，用不上的章节可删）。`bodyMarkdown` 不得包含以下二级标题：`需求描述`、`原话（verbatim）`、`原话`、`verbatim`、`Claude 解读`、`Claude 解读（可选）`、`歧义点`、`歧义点（可选）`、`保真差异`、`保真差异（可选）`。提供 `bodyMarkdown` 时，`applyRequirementAnalysis` 会以 O2 语义整段替换「原话 section 后 ~ Claude 解读 section 前」的主体区；未提供时保持旧三锚点写入路径。严禁在 anchor 内用 `fs.writeFile` 直接改 requirement md 的分析 section；必须走 lib 的 safeWriteFile/CAS/EventJournal 路径。
+`analysisFile` 必须是 JSON，字段为非空字符串：`claudeInterpretation`、`ambiguities`、`fidelityDiff`；可选字段 `bodyMarkdown` 为字符串，用于按需求模板主体产出二~十三章（复杂度自适应，用不上的章节可删）。`ambiguities` 必须写闭环形态：已问已答的拍板记录（含答案与理由）或显式移交下一节点的技术项；不得把未获答复的问题写成"待用户××"。命中未决用户拍板项时，不调用 `applyRequirementAnalysis`，先在当前终端问到答案。`bodyMarkdown` 不得包含以下二级标题：`需求描述`、`原话（verbatim）`、`原话`、`verbatim`、`Claude 解读`、`Claude 解读（可选）`、`歧义点`、`歧义点（可选）`、`保真差异`、`保真差异（可选）`。提供 `bodyMarkdown` 时，`applyRequirementAnalysis` 会以 O2 语义整段替换「原话 section 后 ~ Claude 解读 section 前」的主体区；未提供时保持旧三锚点写入路径。严禁在 anchor 内用 `fs.writeFile` 直接改 requirement md 的分析 section；必须走 lib 的 safeWriteFile/CAS/EventJournal 路径。
 
 ### breakdown-draft action 契约
 
@@ -168,4 +168,4 @@ v1.x 阶段进入任何业务节点都必须至少完成：
 3. 已处理和仍命中的必问项。
 4. Codex 协商摘要和你的反思摘要。
 5. 写入的文件路径。
-6. 下一步是自动继续、等待用户拍板，还是自然停下。
+6. 下一步是自动继续、因命中拍板项未获答复而停在终端等待答案，还是节点已完成后自然停下等待下一意图。
