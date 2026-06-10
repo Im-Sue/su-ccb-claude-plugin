@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.2.0 - 2026-06-10
+
+CCB v1.2 — 合并 gate 按需求隔离收口，并加强 root canonical 写入锁。
+
+### Added
+- `withCanonicalRepoLock`：root canonical 写操作增加仓库级锁，降低并行 closeout 时的 git 写入竞争。
+- 需求资产 dirty classifier：`docs/.ccb/assets/requirements/<reqId>/` 中合法单层图片资产按需求归属纳入 owner canonical sync。
+
+### Changed
+- mgsync 合并洁净度按需求隔离：跨需求 docs / 协调件不再互相阻断 owner 合并，TOLERATE 只放行、不 stage、不删除。
+- dirty-gate 三态 classifier 收口：对 requirement-bound docs、evergreen docs、state/config/schema/contract、需求资产统一判定 OWN / TOLERATE / FOREIGN。
+- association gate 外层与 gitlink executor 内层复用同一 classifier，保留正在同步的 submodule pathspec 容忍。
+
+### Fixed
+- 未跟踪的 state/config/schema/contract 与未声明机器产物保持 FOREIGN，避免无归属机器层变更被放行。
+- 删除/改名的资产与 docs 仍视为 FOREIGN，防止 closeout 误提交或掩盖外部脏状态。
+
 ## v1.1.0 - 2026-06-08
 
 CCB v1.1 — multispace worktree 运行时 + su-init 分层架构生成 + 文档表达规范 v1。
