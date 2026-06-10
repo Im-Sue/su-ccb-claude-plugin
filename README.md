@@ -77,20 +77,22 @@ SU-CCB 的本质，是把**人类工程团队成熟的管理实践**搬到 AI �
   → 归档证据（可复盘）
 ```
 
+<a id="install"></a>
+
 ## 快速开始
 
+先在**系统级** Claude Code 安装 plugin，再启动 CCB / Oriel；CCB 会把系统级 `~/.claude/settings.json` 投影进每个 slot，让派生 agent 也能使用已启用的 `ccb@SU-CCB`。
+
 ```bash
-# 1. 安装 Claude Plugin
+# 1. 在系统级 Claude Code 安装 Claude Plugin
 /plugin marketplace add Im-Sue/su-ccb-claude-plugin
 /plugin install ccb@SU-CCB
 
-# 2. 安装配套 Codex Skills（在 Codex 会话中执行）
-$skill-installer install https://github.com/Im-Sue/su-ccb-codex-skills/tree/main/skills/ccb-execute
-$skill-installer install https://github.com/Im-Sue/su-ccb-codex-skills/tree/main/skills/ccb-doc
-
-# 3. 在项目中初始化
+# 2. 在项目中初始化
 /ccb:su-init
 ```
+
+配套 Codex Skills 请按 [su-ccb-codex-skills README 安装说明](https://github.com/Im-Sue/su-ccb-codex-skills#install) 安装；这里不复制命令，避免多处漂移。
 
 > **前置必装**：底层运行时 [claude_codex_bridge](https://github.com/SeemSeam/claude_codex_bridge)（`ccb` / `ccbd`，提供 Claude↔Codex 桥接）。从 [Releases](https://github.com/SeemSeam/claude_codex_bridge/releases) 下载后 `./install.sh install`，或源码 clone。**仅支持 WSL 与 macOS**（原生 Windows 走 WSL）。
 
