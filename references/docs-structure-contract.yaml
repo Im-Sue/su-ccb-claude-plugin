@@ -65,6 +65,7 @@ machine_layer:
     - events/journal.jsonl     # 流水账(审计)
     - locks/                   # 写锁
     - drafts/breakdown/        # 拆分草稿(机制件;人读 review 投影到 03)
+    - assets/requirements/<reqId>/  # 需求图片/附件资产,按需求 id 归属
     - schemas/                 # 校验规则
   not_holds: [需求本体, 设计本体, 任务本体, 状态本体]   # 这些上移人读层
 
