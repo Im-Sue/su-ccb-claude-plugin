@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.1 - 2026-06-12
+
+CCB v1.2.1 — 四仓发版对齐（patch）：文档澄清。
+
+### Changed
+- 明确 system-level plugin 安装说明。
+
 ## v1.2.0 - 2026-06-10
 
 CCB v1.2 — 合并 gate 按需求隔离收口，并加强 root canonical 写入锁。
