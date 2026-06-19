@@ -34,6 +34,23 @@ function arrayScalar(value) {
   return body.split(",").map((item) => scalar(item));
 }
 
+function lineIndent(line) {
+  return line.match(/^(\s*)/)?.[1].length ?? 0;
+}
+
+function readNestedList(lines, startIndex, baseIndent) {
+  const list = [];
+  let index = startIndex;
+  for (; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.trim() && lineIndent(line) <= baseIndent) break;
+    const match = line.match(/^\s*-\s*(.+?)\s*$/);
+    if (!match) continue;
+    list.push(arrayScalar(match[1]) ?? scalar(match[1]));
+  }
+  return { value: list, nextIndex: index };
+}
+
 function readTopLevel(lines, key) {
   const pattern = new RegExp(`^${key}:\\s*(.+?)\\s*$`);
   for (const line of lines) {
@@ -66,16 +83,22 @@ function parseFields(lines) {
   for (let index = start + 1; index < lines.length; index += 1) {
     const line = lines[index];
     if (line.trim() && !line.startsWith(" ")) break;
-    const fieldMatch = line.match(/^  ([A-Za-z0-9_]+):\s*$/);
+    const fieldMatch = line.match(/^  ([A-Za-z0-9_.]+):\s*$/);
     if (fieldMatch) {
       current = {};
       fields.set(fieldMatch[1], current);
       continue;
     }
     if (!current) continue;
-    const propertyMatch = line.match(/^    ([A-Za-z0-9_]+):\s*(.+?)\s*$/);
+    const propertyMatch = line.match(/^    ([A-Za-z0-9_]+):\s*(.*?)\s*$/);
     if (!propertyMatch) continue;
     const [, key, raw] = propertyMatch;
+    if (raw === "") {
+      const nested = readNestedList(lines, index + 1, lineIndent(line));
+      current[key] = nested.value;
+      index = nested.nextIndex - 1;
+      continue;
+    }
     current[key] = arrayScalar(raw) ?? scalar(raw);
   }
   return fields;
@@ -140,8 +163,70 @@ function isRecord(value${ts ? ": unknown" : ""})${ts ? ": value is Record<string
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
+function isMissing(value${ts ? ": unknown" : ""})${ts ? ": boolean" : ""} {
+  return value === undefined || value === null || value === "";
+}
+
 function issue(path${ts ? ": string" : ""}, actual${ts ? ": unknown" : ""}, expected${ts ? ": string" : ""})${ts ? ": ValidationIssue" : ""} {
   return { path, actual, expected };
+}
+
+function stringArray(value${ts ? ": unknown" : ""})${ts ? ": string[]" : ""} {
+  return Array.isArray(value) ? value.map(String) : [];
+}
+
+function stringGroups(value${ts ? ": unknown" : ""})${ts ? ": string[][]" : ""} {
+  return Array.isArray(value) ? value.filter(Array.isArray).map((group) => group.map(String)) : [];
+}
+
+function getPathValue(record${ts ? ": Record<string, unknown>" : ""}, path${ts ? ": string" : ""})${ts ? ": unknown" : ""} {
+  let current${ts ? ": unknown" : ""} = record;
+  for (const part of path.split(".")) {
+    if (!isRecord(current)) return undefined;
+    current = current[part];
+  }
+  return current;
+}
+
+function utf8ByteLength(value${ts ? ": unknown" : ""})${ts ? ": number" : ""} {
+  const text = JSON.stringify(value);
+  let bytes = 0;
+  for (const char of text) {
+    const codePoint = char.codePointAt(0) ?? 0;
+    if (codePoint <= 0x7f) bytes += 1;
+    else if (codePoint <= 0x7ff) bytes += 2;
+    else if (codePoint <= 0xffff) bytes += 3;
+    else bytes += 4;
+  }
+  return bytes;
+}
+
+function valueDepth(value${ts ? ": unknown" : ""})${ts ? ": number" : ""} {
+  if (!value || typeof value !== "object") return 0;
+  const children = Array.isArray(value) ? value : Object.values(value);
+  if (children.length === 0) return 1;
+  return 1 + Math.max(...children.map((child) => valueDepth(child)));
+}
+
+function hasBase64BusinessField(value${ts ? ": unknown" : ""})${ts ? ": boolean" : ""} {
+  if (Array.isArray(value)) return value.some((item) => hasBase64BusinessField(item));
+  if (!isRecord(value)) return false;
+  return Object.entries(value).some(([key, nested]) => key.endsWith("_b64") || hasBase64BusinessField(nested));
+}
+
+function validateDocTypeValue(value${ts ? ": unknown" : ""}, path${ts ? ": string" : ""}, issues${ts ? ": ValidationIssue[]" : ""})${ts ? ": void" : ""} {
+  const pattern = /^[a-z][a-z0-9_]*$/;
+  if (typeof value === "string") {
+    if (!pattern.test(value)) issues.push(issue(path, value, "snake_case doc_type"));
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const [index, item] of value.entries()) {
+      if (typeof item !== "string" || !pattern.test(item)) {
+        issues.push(issue(\`\${path}[\${index}]\`, item, "snake_case doc_type"));
+      }
+    }
+  }
 }
 
 function isStrictIso8601(value${ts ? ": unknown" : ""})${ts ? ": boolean" : ""} {
@@ -226,6 +311,17 @@ function validateField(rule${ts ? ": Record<string, unknown>" : ""}, value${ts ?
       issues.push(issue(path, value, "object"));
       return;
     }
+    const maxBytes = typeof rule.max_bytes === "number" ? rule.max_bytes : null;
+    if (maxBytes !== null && utf8ByteLength(objectValue) > maxBytes) {
+      issues.push(issue(path, value, \`object <= \${maxBytes} bytes\`));
+    }
+    const maxDepth = typeof rule.max_depth === "number" ? rule.max_depth : null;
+    if (maxDepth !== null && valueDepth(objectValue) > maxDepth) {
+      issues.push(issue(path, value, \`object depth <= \${maxDepth}\`));
+    }
+    if ((maxBytes !== null || maxDepth !== null) && hasBase64BusinessField(objectValue)) {
+      issues.push(issue(path, value, "must not contain *_b64 business fields"));
+    }
     const allowedKeys = Array.isArray(rule.allowed_keys) ? rule.allowed_keys.map(String) : null;
     if (allowedKeys) {
       const allowed = new Set(allowedKeys);
@@ -233,9 +329,9 @@ function validateField(rule${ts ? ": Record<string, unknown>" : ""}, value${ts ?
         if (!allowed.has(key)) issues.push(issue(\`\${path}.\${key}\`, objectValue[key], \`allowed key: \${allowedKeys.join(" | ")}\`));
       }
     }
-    const requiredKeys = Array.isArray(rule.required_keys) ? rule.required_keys.map(String) : [];
+    const requiredKeys = Array.isArray(rule.required_keys) ? rule.required_keys.map(String) : stringArray(rule.required);
     for (const key of requiredKeys) {
-      if (objectValue[key] === undefined || objectValue[key] === null || objectValue[key] === "") {
+      if (isMissing(objectValue[key])) {
         issues.push(issue(\`\${path}.\${key}\`, objectValue[key], "required"));
       }
     }
@@ -255,6 +351,25 @@ function validateField(rule${ts ? ": Record<string, unknown>" : ""}, value${ts ?
     if (type === "non_empty_array" && value.length === 0) issues.push(issue(path, value, "non-empty array"));
     if (type === "array_of_task_id" && value.some((item) => typeof item !== "string")) {
       issues.push(issue(path, value, "array of task ids"));
+    }
+    const itemRequiredGroups = stringGroups(rule.item_required_any_of);
+    const checkDocTypes = rule.doc_type_format === "snake_case";
+    for (const [index, item] of value.entries()) {
+      const itemPath = \`\${path}[\${index}]\`;
+      if (itemRequiredGroups.length > 0) {
+        if (!isRecord(item)) {
+          issues.push(issue(itemPath, item, "object"));
+          continue;
+        }
+        const hasAllowedGroup = itemRequiredGroups.some((group) => group.every((key) => !isMissing(item[key])));
+        if (!hasAllowedGroup) {
+          issues.push(issue(itemPath, item, \`one of required key sets: \${itemRequiredGroups.map((group) => group.join(" + ")).join(" | ")}\`));
+        }
+      }
+      if (checkDocTypes && isRecord(item)) {
+        validateDocTypeValue(item.doc_type, \`\${itemPath}.doc_type\`, issues);
+        validateDocTypeValue(item.doc_types, \`\${itemPath}.doc_types\`, issues);
+      }
     }
     return;
   }
@@ -302,7 +417,7 @@ ${exportPrefix}function ${schema.functionName}(input${ts ? ": unknown" : ""})${t
   }
   for (const rule of FIELD_RULES) {
     const fieldName = String(rule.name);
-    validateField(rule, frontmatter[fieldName], issues);
+    validateField(rule, getPathValue(frontmatter, fieldName), issues);
   }
   if (BODY_RULE?.type === "markdown_min_50_chars_with_heading_or_list") {
     if (!hasUsefulMarkdown(body)) issues.push(issue("body", body, "markdown with >=50 chars and heading or list"));
