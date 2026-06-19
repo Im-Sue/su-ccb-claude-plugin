@@ -10,3 +10,7 @@ checks:
     kind: system-verifiable
   - check_id: journal_event_exists
     kind: system-verifiable
+  - check_id: dev_task_scope_terminal
+    kind: system-verifiable
+  - check_id: dev_task_requirement_terminal
+    kind: system-verifiable

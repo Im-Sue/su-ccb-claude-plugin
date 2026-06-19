@@ -13,17 +13,19 @@
 
 ---
 
-## 0. 4 层 Guard 总览
+## 0. 5 层 Guard 总览
 
 | 层 | 触发时机 | 数量 | 命名前缀 |
 |---|---|---|---|
-| **L1: pre-condition** | 原语 stage 2（执行前） | 13 | `pre_*` |
+| **L1: pre-condition** | 原语 stage 2（执行前） | 14 | `pre_*` |
 | **L2: post-condition** | 原语 stage 4（执行后） | 7 | `post_*` |
-| **L3: transition invariant** | 节点 transition 触发 / batch state mutation | 8 | `inv_*` |
+| **L3: transition invariant** | 节点 transition 触发 / batch state mutation | 12 | `inv_*` |
 | **L4: PreToolUse hook** | Claude Code 工具调用前（Bash/Edit/Write/AskUserQuestion 等） | 3 | `hook_*` |
-| **L5: capability outcome guard** | `applyCapabilityOutcome` policy 执行前 | 4 | capability policy local id |
+| **L5: capability outcome guard** | `applyCapabilityOutcome` policy 执行前 | 10 | capability policy local id |
 
-**总计 41 条 guard**。后续新增必须在本表注册并增加 ID，不允许在 SKILL.md / manifest / 散文里"隐式约束"。
+**总计 46 条 guard**。后续新增必须在本表注册并增加 ID，不允许在 SKILL.md / manifest / 散文里"隐式约束"。
+
+## L5: Capability Outcome Guards（10 条）
 
 ### `requirement_cancel_terminal_protection`
 - **触发 policy**: `requirement.cancel:cancelled:requirement`
@@ -49,9 +51,45 @@
 - **失败行为**: 返回 `GUARD_FAILED`，done 子任务保持 done。
 - **来源**: 913778 取消闭环 pr2。
 
+### `no_self_referential_event`
+- **触发 policy**: 所有 capability-outcome policy 中声明该 guard 的条目。
+- **检查条件**: evidence 不得引用当前 outcome 即将写入的 `capability-outcome:<outcome_id>:applied` EventJournal 事件。
+- **失败行为**: evidence validation 失败；不得用当前 outcome 的未来事件证明当前 outcome。
+- **来源**: capability-outcome evidence registry。
+
+### `no_unclosed_outcome_dependency`
+- **触发 policy**: `reconcile.apply:reconcile_drift_repaired:subtask`
+- **检查条件**: reconcile 修复不得依赖尚未闭合的 capability outcome；当前 policy 无 dependency 输入时视为满足，后续若引入 dependency 字段必须在 evidence validation 中闭环校验。
+- **失败行为**: evidence validation 失败；不得应用依赖未闭合的 outcome。
+- **来源**: capability-outcome-policy.yaml policy guard。
+
+### `requirement_finalize_expected_hash`
+- **触发 policy**: `requirement.finalize:delivered:requirement`
+- **检查条件**: 必须提供 `expectedHash` 或 `subjectRef.base_hash`，且当前 requirement markdown hash 与之相同。
+- **失败行为**: 缺 hash 返回 `GUARD_FAILED`；hash 不匹配返回 `CAS_CONFLICT` 并要求 reconcile。
+- **来源**: capability-outcome runtime guard。
+
+### `requirement_not_cancelled_or_deferred`
+- **触发 policy**: `requirement.finalize:delivered:requirement`
+- **检查条件**: 当前 Requirement 不能为 `cancelled` 或 `deferred`。
+- **失败行为**: 返回 `GUARD_FAILED`，不得把取消/暂缓需求 finalize 为 delivered。
+- **来源**: capability-outcome runtime guard。
+
+### `requirement_promote_forward_only`
+- **触发 policy**: `requirement.promote:planning:requirement`
+- **检查条件**: 当前 Requirement 为 `drafting` 时允许推进到 `planning`；已为 `planning` 时 no-op；其它状态拒绝。
+- **失败行为**: 返回 `GUARD_FAILED`，不得反向或跨级覆盖 Requirement 状态。
+- **来源**: capability-outcome runtime guard。
+
+### `requirement_promote_delivering_forward_only`
+- **触发 policy**: `requirement.promote:delivering:requirement`
+- **检查条件**: 当前 Requirement 为 `planning` 时允许推进到 `delivering`；已为 `delivering` 时 no-op；其它状态拒绝。
+- **失败行为**: 返回 `GUARD_FAILED`，不得把非 planning/delivering Requirement 标为 delivering。
+- **来源**: capability-outcome runtime guard。
+
 ---
 
-## 1. L1: Pre-condition Guards（13 条）
+## 1. L1: Pre-condition Guards（14 条）
 
 ### `pre_codex_mounted`
 - **拦截原语**: consult_codex, explore_codex, dispatch_to_codex
@@ -201,7 +239,7 @@
 
 ---
 
-## 3. L3: State Transition Invariants（8 条）
+## 3. L3: State Transition Invariants（12 条）
 
 > 这一层独立于工具 pre-condition，由 transition-table.md / 节点引擎在 transition 触发时校验。
 > v0.3.1 §6.3 红线：是"时间规则"而不是"工具规则"。

@@ -2,9 +2,10 @@
 # CCB Kernel · node-manifest-schema.yaml
 # =============================================================================
 # Canonical: 6 of 6
-# Status: active (v0.5.1 lifecycle status protocol)
+# Status: retired/historical (active node manifests are Markdown `.node.md`)
 # Owner: CCB protocol kernel
-# Authority: 节点 manifest 文件（references/kernel/nodes/<node_id>.node.yaml）的 schema 定义
+# Authority: 历史 `.node.yaml` manifest schema 参考；active kernel 只保留
+#   `transition_ref.forbidden_fields` 给 lint 抽取 refs-only 禁止字段。
 # Critical constraint:
 #   manifest 的 transitions 字段必须 refs-only（只能 ref transition-table.md 已注册的 ID），
 #   manifest 内不允许 inline 新 transition 定义、不允许重写 guard 逻辑。

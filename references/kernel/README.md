@@ -48,7 +48,7 @@ updated_at: 2026-05-21
 
 ## Live registries
 
-`registries/transition-table.md`、`registries/guard-registry.md`、`registries/node-manifest-schema.yaml` 仍由 kernel lint 消费。旧 `.node.yaml` 节点定义与 capability registry schema 已退役，不再随 active kernel 保留。
+`registries/transition-table.md`、`registries/guard-registry.md` 仍由 kernel lint 作为 active registry 消费。`registries/node-manifest-schema.yaml` 仅作为 historical `.node.yaml` schema 与 `transition_ref.forbidden_fields` lint 输入保留；active 节点规则以 `nodes/*.node.md` 为准。旧 capability registry schema 已退役，不再随 active kernel 保留。
 
 ## 阅读顺序
 
