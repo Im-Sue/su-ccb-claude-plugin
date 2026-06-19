@@ -1,6 +1,6 @@
 ---
 name: su-defer
-description: 暂缓 Requirement 或子任务的大状态指令入口。
+description: 暂缓 Requirement 的大状态指令入口。
 metadata:
   short-description: CCB 暂缓入口
 ---
@@ -9,7 +9,7 @@ metadata:
 
 ## 1. 指令意图说明
 
-`/ccb:su-defer` 用于把某个 Requirement 或子任务暂时搁置，同时保留已有分析、设计、draft、执行和审计证据。
+`/ccb:su-defer` 用于把某个 Requirement 暂时搁置，同时保留已有分析、设计、draft、执行和审计证据。
 
 ## 2. 节点集声明
 
@@ -27,10 +27,9 @@ defer 不属于单个节点，但会暂停当前节点推进。恢复时通过 `
 
 ```text
 /ccb:su-defer requirement_id=<id> reason="优先级降低"
-/ccb:su-defer task_id=<id>
 ```
 
-`requirement_id` 入口必须走下方受治理 lib。`task_id` 入口当前没有 `subtask.defer` capability outcome；不得直接改 dev_task frontmatter 或 state 文件，必须停止并升级为需要补齐子任务暂缓契约。
+`requirement_id` 入口必须走下方受治理 lib。子任务路径暂不支持：`task_id` 入口当前没有 `subtask.defer` capability outcome；不得直接改 dev_task frontmatter 或 state 文件，必须停止并升级为需要补齐子任务暂缓契约。
 
 ## 4. Lib 调用契约
 
@@ -53,8 +52,6 @@ const result = await deferRequirement({
 ## 5. Plugin 独立运行约定
 
 遵循 `references/kernel/registries/plugin-independent-operation.md`。
-
-定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。Requirement / dev_task 等业务文档落点必须经 docs-structure resolver / 目录契约定位；`.ccb` 只承载 events、draft、lock、index cache、schema/config 等机器协调件。
 
 lib 返回后可 best-effort 调用 Console `POST /scan` 加速投影收敛；Console 缺席、端口不可达或扫描失败都只记录在回执中，不改变暂缓结果。不得调用 Console 业务写入接口。
 

@@ -1,6 +1,6 @@
 ---
 name: su-reactivate
-description: 重新激活 cancelled/deferred 主体的大状态指令入口。
+description: 重新激活 cancelled/deferred Requirement 的大状态指令入口。
 metadata:
   short-description: CCB 重新激活入口
 ---
@@ -9,27 +9,26 @@ metadata:
 
 ## 1. 指令意图说明
 
-`/ccb:su-reactivate` 用于让已取消或暂缓的 Requirement / 子任务重新进入可推进状态。它必须保留历史取消/暂缓原因，不得抹掉审计。
+`/ccb:su-reactivate` 用于让已取消或暂缓的 Requirement 重新进入可推进状态。它必须保留历史取消/暂缓原因，不得抹掉审计。
 
 ## 2. 节点集声明
 
-重新激活后应根据上下文回到合适节点：
+重新激活后应根据 Requirement 上下文回到合适节点：
 
 | 情况 | 建议节点 |
 |---|---|
 | 需求可能已过期 | `references/kernel/nodes/requirement_analysis.node.md` |
 | 技术方案可能失效 | `references/kernel/nodes/technical_design.node.md` |
 | 拆分草案需调整 | `references/kernel/nodes/task_breakdown.node.md` |
-| 子任务可直接继续 | `references/kernel/nodes/dispatch.node.md` 或 `implementation.node.md` |
+| 已有子任务可直接继续 | `references/kernel/nodes/dispatch.node.md` 或 `implementation.node.md` |
 
 ## 3. 触发约定
 
 ```text
 /ccb:su-reactivate requirement_id=<id>
-/ccb:su-reactivate task_id=<id> reason="重新纳入本轮交付"
 ```
 
-`requirement_id` 入口必须走下方受治理 lib。`task_id` 入口当前没有 `subtask.reactivate` capability outcome；不得直接改 dev_task frontmatter 或 state 文件，必须停止并升级为需要补齐子任务重新激活契约。
+`requirement_id` 入口必须走下方受治理 lib。子任务路径暂不支持：`task_id` 入口当前没有 `subtask.reactivate` capability outcome；不得直接改 dev_task frontmatter 或 state 文件，必须停止并升级为需要补齐子任务重新激活契约。
 
 ## 4. Lib 调用契约
 
@@ -52,8 +51,6 @@ const result = await reactivateRequirement({
 ## 5. Plugin 独立运行约定
 
 遵循 `references/kernel/registries/plugin-independent-operation.md`。
-
-定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。Requirement / dev_task 等业务文档落点必须经 docs-structure resolver / 目录契约定位；`.ccb` 只承载 state、events、draft、report、lock、index cache 等机器协调件。
 
 lib 返回后可 best-effort 调用 Console `POST /scan` 加速投影收敛；Console 缺席、端口不可达或扫描失败都只记录在回执中，不改变重新激活结果。不得调用 Console 业务写入接口。
 
