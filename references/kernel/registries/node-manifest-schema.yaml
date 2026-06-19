@@ -63,10 +63,10 @@ manifest:
       type: array<enum.task_kind>
       required: true
       default: [subtask]
-      values: [epic, subtask]
+      values: [subtask]
       description: |
         当前节点适用的 Task.kind 集合。v0.5.0 起 7 个 canonical 节点全部必须显式声明
-        applicable_kinds: [subtask]；Epic / Requirement 不进入 7 节点，分别由 lifecycle manifest 承载。
+        applicable_kinds: [subtask]；Requirement 不进入 7 节点，由 lifecycle manifest 承载。
 
     # --- 入口条件 ---
     entry_conditions:

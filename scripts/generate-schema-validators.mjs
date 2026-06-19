@@ -188,6 +188,18 @@ function getPathValue(record${ts ? ": Record<string, unknown>" : ""}, path${ts ?
   return current;
 }
 
+function conditionMatches(expression${ts ? ": unknown" : ""}, record${ts ? ": Record<string, unknown>" : ""})${ts ? ": boolean" : ""} {
+  if (typeof expression !== "string") return false;
+  return expression.split(/\\s+\\|\\|\\s+/).some((rawClause) => {
+    const clause = rawClause.trim();
+    const existsMatch = clause.match(/^([A-Za-z0-9_.]+)\\s+exists$/);
+    if (existsMatch) return getPathValue(record, existsMatch[1]) !== undefined;
+    const equalsMatch = clause.match(/^([A-Za-z0-9_.]+)\\s*==\\s*([A-Za-z0-9_.-]+)$/);
+    if (equalsMatch) return String(getPathValue(record, equalsMatch[1])) === equalsMatch[2];
+    return false;
+  });
+}
+
 function utf8ByteLength(value${ts ? ": unknown" : ""})${ts ? ": number" : ""} {
   const text = JSON.stringify(value);
   let bytes = 0;
@@ -417,7 +429,11 @@ ${exportPrefix}function ${schema.functionName}(input${ts ? ": unknown" : ""})${t
   }
   for (const rule of FIELD_RULES) {
     const fieldName = String(rule.name);
-    validateField(rule, getPathValue(frontmatter, fieldName), issues);
+    const value = getPathValue(frontmatter, fieldName);
+    if (conditionMatches(rule.required_when, frontmatter) && isMissing(value)) {
+      issues.push(issue(fieldName, value, \`required when \${rule.required_when}\`));
+    }
+    validateField(rule, value, issues);
   }
   if (BODY_RULE?.type === "markdown_min_50_chars_with_heading_or_list") {
     if (!hasUsefulMarkdown(body)) issues.push(issue("body", body, "markdown with >=50 chars and heading or list"));

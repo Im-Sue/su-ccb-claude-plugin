@@ -261,16 +261,15 @@
 
 ### `inv_kind_node_consistency_guard`
 - **检查时机**: 任何 task_state persist / scheduler transition / task_breakdown hierarchy step
-- **规则**: `applicable_kinds(task.current_node) MUST contain task.kind`；`kind=epic` 时 `current_node IS NULL`
+- **规则**: canonical 7 节点仅承载 SubTask；`task.current_node` 必须属于节点注册表，且对应 manifest `applicable_kinds` 包含 `subtask`
 - **失败行为**: 回滚 mutation + emit invariant_violation
 - **来源**: v0.5.0 hierarchy D2 / 技术设计 §1.7
 
 ### `inv_parent_existence_guard`
 - **检查时机**: Task INSERT / UPDATE / hierarchy lifecycle handler
 - **规则**:
-  - `kind=subtask AND parent_epic_id != null` ⇒ `Task[parent_epic_id].kind == 'epic'`
-  - parent Epic 与 SubTask 必须 `projectId` 相同且 `requirement_id` 一致
-  - `kind=epic` ⇒ `Requirement[requirement_id] EXISTS AND same_project`
+  - SubTask 必须绑定存在的 Requirement
+  - SubTask 与 Requirement 必须 `projectId` 相同且 `requirement_id` 一致
 - **失败行为**: 回滚 mutation；DB 层由 CHECK/TRIGGER 兜底
 - **来源**: v0.5.0 hierarchy D8 / R4 blocker 2
 
@@ -279,18 +278,6 @@
 - **规则**: 目标 Requirement 的所有 child SubTask 均已进入 `status=done + current_node=archive` 终态
 - **失败行为**: transition 保持 delivering，不触发 delivered
 - **来源**: v0.5.0 hierarchy lifecycle
-
-### `inv_source_subtask_belongs_to_target_epic`
-- **检查时机**: `epic_replan_requested` 事件消费 / `handler__epic_replan`
-- **规则**: `event.source_subtask_id.parent_epic_id == event.target_epic_id`
-- **失败行为**: 拒绝 replan handler，emit invariant_violation
-- **来源**: v0.5.0 hierarchy D9 / R3 幂等加强
-
-### `inv_epic_replan_not_already_processed`
-- **检查时机**: `handler__epic_replan`
-- **规则**: `event.failed_review_intent_id` 派生的 idempotency_key 尚未处理过
-- **失败行为**: 跳过重复 handler，保留幂等 trace
-- **来源**: v0.5.0 hierarchy D9 / R3 幂等加强
 
 ---
 
@@ -380,9 +367,8 @@
 | engineering-decidable decision append / freeze | inv_engineering_decision_scope_boundary |
 | 任何 spec/adr/consult 文件 Edit/Write | inv_immutable_frozen_artifacts |
 | kind/current_node 持久化 | inv_kind_node_consistency_guard |
-| parentEpic/requirement 跨行一致性 | inv_parent_existence_guard |
+| subtask/requirement 跨行一致性 | inv_parent_existence_guard |
 | requirement delivered 聚合 | inv_all_child_subtasks_archived |
-| epic replan handler | inv_source_subtask_belongs_to_target_epic, inv_epic_replan_not_already_processed |
 
 ### 5.4 L4 hook 拦截工具
 

@@ -10,10 +10,6 @@ validation_note: >
   and applies hard-coded checks in lib/runtime/schema-validate.mjs, including
   strict ISO8601 datetime validation for analysis_applied_at.
 
-required_fields:
-  - analysis_input_hash
-  - analysis_applied_at
-
 fields:
   status:
     type: enum
@@ -22,9 +18,9 @@ fields:
     business_meaning: Canonical requirement lifecycle status owned by requirement markdown and projected by Console.
   analysis_input_hash:
     type: sha256_hex
-    required: true
+    required_when: analysis_input_hash exists || analysis_applied_at exists
     business_meaning: Hash of the title plus requirement description that the analysis was based on.
   analysis_applied_at:
     type: iso8601_datetime
-    required: true
+    required_when: analysis_input_hash exists || analysis_applied_at exists
     business_meaning: Timestamp proving the plugin actively applied the latest analysis.

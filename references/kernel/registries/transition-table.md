@@ -511,7 +511,7 @@ v0.3.1 §12.1 警告："多真相源漂移"是节点化最大落地风险。
 - **guard_refs**:
   - `inv_kind_node_consistency_guard`
 - **state_effects**:
-  - append EventJournal payload `{ from_epic_id, spec_section_id, skipped_nodes }`
+  - append EventJournal payload `{ requirement_id, subtask_id, section_id, skipped_nodes }`
 - **rollback_safe**: 否
 
 ---
