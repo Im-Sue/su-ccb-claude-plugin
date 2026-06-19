@@ -275,15 +275,9 @@
 - **来源**: v0.5.0 hierarchy D8 / R4 blocker 2
 
 ### `inv_all_child_subtasks_archived`
-- **检查时机**: `epic__on_all_subtasks_archived__delivering_to_delivered`
-- **规则**: 目标 Epic 的所有 active child SubTask 均已进入 `status=done + current_node=archive` 终态
+- **检查时机**: `req__on_all_subtasks_archived__delivering_to_delivered`
+- **规则**: 目标 Requirement 的所有 child SubTask 均已进入 `status=done + current_node=archive` 终态
 - **失败行为**: transition 保持 delivering，不触发 delivered
-- **来源**: v0.5.0 hierarchy lifecycle
-
-### `inv_all_child_epics_delivered`
-- **检查时机**: `req__on_all_epics_delivered__delivering_to_delivered`
-- **规则**: 目标 Requirement 的所有 child Epic 均为 delivered，且 direct SubTask（若有）均为 `status=done + current_node=archive`
-- **失败行为**: transition 保持 delivering
 - **来源**: v0.5.0 hierarchy lifecycle
 
 ### `inv_source_subtask_belongs_to_target_epic`
@@ -387,8 +381,7 @@
 | 任何 spec/adr/consult 文件 Edit/Write | inv_immutable_frozen_artifacts |
 | kind/current_node 持久化 | inv_kind_node_consistency_guard |
 | parentEpic/requirement 跨行一致性 | inv_parent_existence_guard |
-| epic delivered 聚合 | inv_all_child_subtasks_archived |
-| requirement delivered 聚合 | inv_all_child_epics_delivered |
+| requirement delivered 聚合 | inv_all_child_subtasks_archived |
 | epic replan handler | inv_source_subtask_belongs_to_target_epic, inv_epic_replan_not_already_processed |
 
 ### 5.4 L4 hook 拦截工具

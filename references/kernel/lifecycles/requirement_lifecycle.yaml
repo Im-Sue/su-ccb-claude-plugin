@@ -36,3 +36,10 @@ transitions:
     to: cancelled
     trigger_event: user_cancel
     guard_refs: []
+
+  - id: req__on_user_reactivate__cancelled_deferred_to_planning
+    from: [cancelled, deferred]
+    to: planning
+    trigger_event: user_reactivate
+    guard_refs:
+      - requirement_reactivate_status_protection

@@ -430,70 +430,7 @@ v0.3.1 §12.1 警告："多真相源漂移"是节点化最大落地风险。
 
 ---
 
-### 2.10 Epic lifecycle Transitions（v0.5.0，不属于 7 节点）
-
-#### `epic__on_first_subtask_dispatched__planning_to_delivering`
-- **source_lifecycle**: `epic`
-- **source_status**: `planning`
-- **target_status**: `delivering`
-- **trigger**: `on_external_event`
-- **when**: `event_type == 'subtask_dispatched'` AND `event.parent_epic_id == epic.id`
-- **guard_refs**:
-  - `inv_parent_existence_guard`
-- **state_effects**:
-  - `task.kind = 'epic'`
-  - `task.epic_status = 'delivering'`
-- **rollback_safe**: 是
-
-#### `epic__on_all_subtasks_archived__delivering_to_delivered`
-- **source_lifecycle**: `epic`
-- **source_status**: `delivering`
-- **target_status**: `delivered`
-- **trigger**: `on_external_event`
-- **when**: `event_type == 'subtask_archived'`
-- **guard_refs**:
-  - `inv_all_child_subtasks_archived`
-- **state_effects**:
-  - `task.epic_status = 'delivered'`
-- **rollback_safe**: 否
-
-#### `epic__on_subtask_review_fail__delivering_to_planning`
-- **source_lifecycle**: `epic`
-- **source_status**: `delivering`
-- **target_status**: `planning`
-- **trigger**: `on_external_event`
-- **when**: `event_type == 'epic_replan_requested'`
-- **guard_refs**:
-  - `inv_source_subtask_belongs_to_target_epic`
-- **handler**: `epic_lifecycle/handler__epic_replan`
-- **state_effects**:
-  - `task.epic_status = 'planning'`
-  - emit `epic_replan_requested`
-- **rollback_safe**: 是
-
-#### `epic__on_user_cancel__planning_to_cancelled`
-- **source_lifecycle**: `epic`
-- **source_status**: `planning`
-- **target_status**: `cancelled`
-- **trigger**: `on_external_event`
-- **when**: `event_type == 'user_cancel'`
-- **guard_refs**: []
-- **state_effects**:
-  - `task.epic_status = 'cancelled'`
-- **rollback_safe**: 否
-
-#### `epic__on_user_cancel__delivering_to_cancelled`
-- **source_lifecycle**: `epic`
-- **source_status**: `delivering`
-- **target_status**: `cancelled`
-- **trigger**: `on_external_event`
-- **when**: `event_type == 'user_cancel'`
-- **guard_refs**: []
-- **state_effects**:
-  - `task.epic_status = 'cancelled'`
-- **rollback_safe**: 否
-
-### 2.11 Requirement lifecycle Transitions（v0.5.0，Requirement 表）
+### 2.10 Requirement lifecycle Transitions（v0.5.0，Requirement 表）
 
 #### `req__on_analysis_done__drafting_to_planning`
 - **source_lifecycle**: `requirement`
@@ -518,14 +455,14 @@ v0.3.1 §12.1 警告："多真相源漂移"是节点化最大落地风险。
   - `Requirement.status = 'delivering'`
 - **rollback_safe**: 是
 
-#### `req__on_all_epics_delivered__delivering_to_delivered`
+#### `req__on_all_subtasks_archived__delivering_to_delivered`
 - **source_lifecycle**: `requirement`
 - **source_status**: `delivering`
 - **target_status**: `delivered`
 - **trigger**: `on_external_event`
-- **when**: `event_type == 'epic_delivered'`
+- **when**: `event_type == 'subtask_archived'`
 - **guard_refs**:
-  - `inv_all_child_epics_delivered`
+  - `inv_all_child_subtasks_archived`
 - **state_effects**:
   - `Requirement.status = 'delivered'`
 - **rollback_safe**: 否
@@ -552,7 +489,19 @@ v0.3.1 §12.1 警告："多真相源漂移"是节点化最大落地风险。
   - `Requirement.status = 'cancelled'`
 - **rollback_safe**: 否
 
-### 2.12 Audit events（emit-only，不改 7 节点状态）
+#### `req__on_user_reactivate__cancelled_deferred_to_planning`
+- **source_lifecycle**: `requirement`
+- **source_status**: `cancelled | deferred`
+- **target_status**: `planning`
+- **trigger**: `on_external_event`
+- **when**: `event_type == 'user_reactivate'`
+- **guard_refs**:
+  - `requirement_reactivate_status_protection`
+- **state_effects**:
+  - `Requirement.status = 'planning'`
+- **rollback_safe**: 是
+
+### 2.11 Audit events（emit-only，不改 7 节点状态）
 
 #### `audit_event__subtask_planning_inherited`
 - **source_lifecycle**: `task_breakdown`
@@ -582,8 +531,7 @@ v0.3.1 §12.1 警告："多真相源漂移"是节点化最大落地风险。
 | review | review__pass__to__archive, review__replan_to_implementation__to__implementation, review__replan_to_task_breakdown__to__task_breakdown, review__replan_to_technical_design__to__technical_design, review__replan_to_requirement_analysis__to__requirement_analysis, review__escalate__to__terminal |
 | archive | archive__on_complete__to__terminal |
 | `__any__` | __any__to__terminal_via_user_cancel, __any__to__terminal_via_loop_budget_exhausted |
-| epic lifecycle | epic__on_first_subtask_dispatched__planning_to_delivering, epic__on_all_subtasks_archived__delivering_to_delivered, epic__on_subtask_review_fail__delivering_to_planning, epic__on_user_cancel__planning_to_cancelled, epic__on_user_cancel__delivering_to_cancelled |
-| requirement lifecycle | req__on_analysis_done__drafting_to_planning, req__on_first_subtask_dispatched__planning_to_delivering, req__on_all_epics_delivered__delivering_to_delivered, req__on_user_defer__any_to_deferred, req__on_user_cancel__any_to_cancelled |
+| requirement lifecycle | req__on_analysis_done__drafting_to_planning, req__on_first_subtask_dispatched__planning_to_delivering, req__on_all_subtasks_archived__delivering_to_delivered, req__on_user_defer__any_to_deferred, req__on_user_cancel__any_to_cancelled, req__on_user_reactivate__cancelled_deferred_to_planning |
 | audit | audit_event__subtask_planning_inherited |
 
 ### 3.2 按 trigger 类型索引
