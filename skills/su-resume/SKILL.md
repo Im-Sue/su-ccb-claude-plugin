@@ -49,7 +49,7 @@ const { draft, hash } = await readBreakdownDraft({ projectRoot, requirementId })
 
 ## 4. Plugin 独立运行约定
 
-定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。直接读取经 resolver 定位的 Requirement / dev_task 等人读文档、EventJournal、draft 和文档地图；任务停点以 dev_task frontmatter 为准。不得调用 Console 业务写入接口恢复状态或消费 user intent。
+遵循 `references/kernel/registries/plugin-independent-operation.md`。直接读取经 resolver 定位的 Requirement / dev_task 等人读文档、EventJournal、draft 和文档地图；任务停点以 dev_task frontmatter 为准。不得调用 Console 业务写入接口恢复状态或消费 user intent。
 
 ## 5. 强协商与 sc 要求
 

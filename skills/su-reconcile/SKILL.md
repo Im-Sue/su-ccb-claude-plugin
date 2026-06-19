@@ -47,7 +47,7 @@ await applyApprovedActions({
 
 ## 4. Plugin 独立运行约定
 
-定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。业务文档落点必须经 docs-structure resolver / 目录契约定位；`.ccb` 只承载 events、draft、lock、index cache、schema/config 等机器协调件。
+遵循 `references/kernel/registries/plugin-independent-operation.md`。
 
 CLI-only 可完成 detect、报告生成和 canonical docs 文件写入。Console 只是触发器、报告展示和 DB 投影刷新层；不得依赖 Console 业务写入 API。
 

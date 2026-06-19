@@ -39,7 +39,7 @@ metadata:
 
 ## 4. Plugin 独立运行约定
 
-启动时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。直接读取经 resolver 定位的 requirement 文档、关联 technical_design / dev_task 文档、breakdown draft 和 EventJournal。修订后的分析写回 requirement markdown，并在 frontmatter 写入：
+遵循 `references/kernel/registries/plugin-independent-operation.md`。直接读取经 resolver 定位的 requirement 文档、关联 technical_design / dev_task 文档、breakdown draft 和 EventJournal。修订后的分析写回 requirement markdown，并在 frontmatter 写入：
 
 1. `analysis_input_hash`：本次分析对应的 title + 需求描述 hash。
 2. `analysis_applied_at`：本次主动应用分析的 ISO8601 时间戳。

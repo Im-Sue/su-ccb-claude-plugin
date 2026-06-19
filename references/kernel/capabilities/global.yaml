@@ -666,6 +666,28 @@ capabilities:
       allowed_fallbacks: []
       forbidden_policies: []
 
+  - capability_id: requirement.reactivate
+    display_name: 重新激活 Requirement
+    category: hierarchy
+    criticality: execution_critical
+    description: 通过 capability outcome 将 cancelled/deferred Requirement 重新写回 planning；planning 幂等，active/terminal 状态由 guard 拒绝。
+    required_artifacts:
+      all_of: [requirement.id, requirement.status]
+    output_contract:
+      produces: [requirement.status]
+      evidence_fields: [requirement.canonical_hash, EventJournal.user_approval]
+    provider_bindings:
+      resolution_order: project_override_then_user_then_global
+      candidates:
+        - binding_id: kernel_requirement_reactivate
+          provider: ccb-kernel
+          entrypoint: primitive:requirement_reactivate
+          role: primary
+    degradation:
+      default_action: escalate
+      allowed_fallbacks: []
+      forbidden_policies: []
+
   - capability_id: requirement.finalize
     display_name: 交付完成 Requirement
     category: hierarchy

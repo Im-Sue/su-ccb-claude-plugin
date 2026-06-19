@@ -182,6 +182,8 @@ Codex 协商指出旧 YAML manifest 应保留并标 deprecated，我采纳。
 
 **常见打回原因**：
 
+通用打回原因见 `references/kernel/registries/node-handbook-conventions.md`；下列为本节点特有原因：
+
 1. 未保护用户已有改动。
 2. 实现范围超过 dispatch brief。
 3. 顺手重构无关模块。
@@ -190,8 +192,7 @@ Codex 协商指出旧 YAML manifest 应保留并标 deprecated，我采纳。
 6. 没有运行验证。
 7. 验证失败但仍声称完成。
 8. 回执没有 changed files。
-9. sc 不可用但没有替代说明。
-10. Review 无法根据回执复查。
+9. Review 无法根据回执复查。
 
 **恢复提示**：
 

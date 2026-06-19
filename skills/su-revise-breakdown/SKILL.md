@@ -57,9 +57,9 @@ await transitionBreakdownDraftStatus({
 
 ## 4. Plugin 独立运行约定
 
-定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。Requirement 与技术设计等业务文档落点必须经 docs-structure resolver / 目录契约定位；`.ccb/drafts` 仅保存拆分草稿机制件。
+遵循 `references/kernel/registries/plugin-independent-operation.md`。`.ccb/drafts` 仅保存拆分草稿机制件。
 
-读取当前 draft、用户反馈和相关 Requirement / technical_design 文档，生成新版 `docs/.ccb/drafts/breakdown/<requirementId>.json`。保留 review history 和旧 revision，不调用 Console 业务写入接口。
+读取当前 draft、用户反馈和相关 Requirement / technical_design 文档，生成新版 `docs/.ccb/drafts/breakdown/<requirementId>.json`。保留 review history 和旧 revision。
 
 ## 5. 强协商与 sc 要求
 

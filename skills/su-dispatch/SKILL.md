@@ -88,9 +88,9 @@ await ensureRequirementWorktree({
 
 ## 4. Plugin 独立运行约定
 
-本 skill 直接读取：
+遵循 `references/kernel/registries/plugin-independent-operation.md`。
 
-启动/定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。业务文档落点必须经 docs-structure resolver / 目录契约定位。
+本 skill 直接读取：
 
 1. dev_task 文档（经 resolver 定位；当前契约落点为 `docs/03_开发计划/`）
 2. `docs/.ccb/drafts/breakdown/*.json`

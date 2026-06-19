@@ -117,6 +117,24 @@ policies:
       - no_self_referential_event
       - requirement_defer_terminal_protection
 
+  - policy_id: requirement.reactivate:planning:requirement
+    capability_id: requirement.reactivate
+    outcome_type: planning
+    subject_type: requirement
+    write_target: requirement_md
+    state_effects:
+      status: set:planning
+    evidence_required:
+      mode: all
+      items:
+        - kind: A
+          source: file
+          check_id: file_exists
+    must_ask_refs: [must_ask_9]
+    guards:
+      - no_self_referential_event
+      - requirement_reactivate_status_protection
+
   - policy_id: subtask.cancel:cancelled:subtask
     capability_id: subtask.cancel
     outcome_type: cancelled

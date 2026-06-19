@@ -40,7 +40,7 @@ metadata:
 
 ## 4. Plugin 独立运行约定
 
-定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。开发任务、技术设计等业务文档落点必须经 docs-structure resolver / 目录契约定位。
+遵循 `references/kernel/registries/plugin-independent-operation.md`。
 
 本 skill 直接读取开发任务文档、回执、diff 摘要和 EventJournal 文件。不调用 Console 业务写入接口获取 proposal 或写审查状态。Console 可以展示 review 结果，但不成为审查真相源。
 

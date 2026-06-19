@@ -57,7 +57,7 @@ manifest:
       values: [requirement, planning, ready, implementing, reviewing, blocked, done]
       description: |
         v0.3.2 兼容字段。当前节点对应的旧 phase（用于 console phase_projection 计算）。
-        v0.4 删除。
+        当前仅作为兼容参考；active Markdown manifest 不依赖它表达节点状态。
 
     applicable_kinds:
       type: array<enum.task_kind>

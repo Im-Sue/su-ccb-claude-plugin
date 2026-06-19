@@ -1,4 +1,5 @@
-# This YAML is contract documentation. Runtime checks are implemented in
+# This YAML is the ADR-0026 cross-runtime baseline used to generate validators
+# for plugin / Console parity. Active runtime checks are implemented in
 # lib/runtime/schema-validate.mjs and lib/dispatch-parser/index.mjs.
 schema_name: anchor-dispatch
 kind: anchor_dispatch_json

@@ -32,10 +32,10 @@ metadata:
 
 ## 4. Plugin 独立运行约定
 
-定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。归档对象的业务文档落点必须经 docs-structure resolver / 目录契约定位；退役文档按契约移入 `docs/99_归档/`，`.ccb` 只承载协调和审计件。
+遵循 `references/kernel/registries/plugin-independent-operation.md`。退役文档按契约移入 `docs/99_归档/`。
 
 快速归档子任务不得执行 worktree 生命周期收尾，包括任何 implementation space；对带 `code_workspace` 的任务也不得调用
-`archiveRequirementWorktree`、`cleanupRequirementWorktree` 或 `requirement.finalize`。quick archive
+`cleanupRequirementWorktree` 或 `requirement.finalize`。quick archive
 只写该 dev_task 终态、归档摘要和 EventJournal。若 quick archive 后该需求已全量终态，只能按
 batch/archive 契约触发 `mergeRequirementWorktree()` 进入 `merged` 预览暂停；worktree+分支保留给用户检查。
 
@@ -43,7 +43,7 @@ batch/archive 契约触发 `mergeRequirementWorktree()` 进入 `merged` 预览�
 `/ccb:su-archive requirement_id=<id>` 的手动归档模式，由它执行 `cleanupRequirementWorktree()` →
 `requirement.finalize`，并支持 finalize-only recovery。
 
-快速归档直接写对应业务文档 / `.ccb` 协调件和 EventJournal，不调用 Console 业务写入接口修状态。
+快速归档直接写对应业务文档 / `.ccb` 协调件和 EventJournal。
 
 ## 5. 强协商与 sc 要求
 

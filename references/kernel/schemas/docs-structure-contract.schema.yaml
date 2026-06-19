@@ -1,4 +1,5 @@
-# This YAML is contract documentation. Runtime structure checks are implemented in
+# This YAML is the ADR-0026 cross-runtime baseline used to generate validators
+# for plugin / Console parity. Active runtime structure checks are implemented in
 # lib/docs-structure/index.mjs.
 schema_name: docs-structure-contract
 kind: docs_structure_contract_yaml

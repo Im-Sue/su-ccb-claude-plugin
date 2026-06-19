@@ -21,6 +21,9 @@ updated_at: 2026-05-21
 | `agent-reply-reviewed-schema.yaml` | v1.5+ agent reply reflection schema 占位 |
 | `state-schema.yaml` | 历史状态字段定义，仍作为兼容参考 |
 | `registries/*.md` / `registries/*.yaml` | lint 使用的 transition、guard、manifest schema registry |
+| `registries/paiban-scan-convention.md` | 拍板项扫描约定 v1 与 rg pattern canonical 源 |
+| `registries/plugin-independent-operation.md` | SKILL Plugin 独立运行通用约定 |
+| `registries/node-handbook-conventions.md` | 节点手册纯通用样板约定 |
 
 ## 7 个节点 manifest
 

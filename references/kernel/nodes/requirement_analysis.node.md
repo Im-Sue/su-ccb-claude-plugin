@@ -206,6 +206,8 @@ status: active
 
 **常见打回原因**：
 
+通用打回原因见 `references/kernel/registries/node-handbook-conventions.md`；下列为本节点特有原因：
+
 1. 只有摘要，没有原文引用。
 2. 只有问题列表，没有优先级。
 3. 只有 Codex “同意”，没有 Codex 质疑。
@@ -213,6 +215,5 @@ status: active
 5. 只有技术疑问，没有业务疑问。
 6. 没有说明为什么某些必问类不命中。
 7. 把“用户后续确认”写进 spec，却没有终端问到答案并写成闭环记录。
-8. sc 不可用但没有替代说明。
-9. EventJournal 找不到协商记录。
-10. 需求分析完成后仍无法回答“什么算交付”。
+8. EventJournal 找不到协商记录。
+9. 需求分析完成后仍无法回答“什么算交付”。

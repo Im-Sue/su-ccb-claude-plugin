@@ -40,7 +40,7 @@ metadata:
 
 ## 4. Plugin 独立运行约定
 
-本 skill 不调用 Console 业务写入接口，不读取 Console 作为业务真相源。定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`；Requirement / technical_design / dev_task 等业务文档落点必须经 docs-structure resolver / 目录契约定位，拆分草案仍写 `docs/.ccb/drafts/breakdown/` 机制件。
+遵循 `references/kernel/registries/plugin-independent-operation.md`。本 skill 不读取 Console 作为业务真相源；拆分草案仍写 `docs/.ccb/drafts/breakdown/` 机制件。
 
 ## 5. Grace window
 

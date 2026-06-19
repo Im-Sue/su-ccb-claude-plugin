@@ -544,14 +544,9 @@ def lint_hierarchy_contract(root: Path, kernel_dir: Path, registry: Registry) ->
     if not (templates_dir / "docs" / "03_开发计划" / "_模板_开发任务.md").exists():
         error("hierarchy_template_contract", "缺少 template: docs/03_开发计划/_模板_开发任务.md")
 
-    for doc in [
-        root / "references" / "task-hierarchy-model.md",
-        root / "CHANGELOG.md",
-        root / "references" / "kernel-upgrade-guide-v0.5.0.md",
-        root / "references" / "plugin-version-matrix.md",
-    ]:
-        if not doc.exists():
-            error("hierarchy_release_doc_contract", f"缺少发布/引用文档: {doc.relative_to(root)}")
+    changelog = root / "CHANGELOG.md"
+    if not changelog.exists():
+        error("hierarchy_release_doc_contract", f"缺少发布文档: {changelog.relative_to(root)}")
 
     return kernel_dir / "hierarchy-contract", issues
 

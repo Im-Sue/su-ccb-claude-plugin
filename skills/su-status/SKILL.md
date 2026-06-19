@@ -47,7 +47,7 @@ const { draft, hash } = await readBreakdownDraft({ projectRoot, requirementId })
 
 ## 4. Plugin 独立运行约定
 
-启动/定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`。业务文档落点必须经 docs-structure resolver / 目录契约定位。
+遵循 `references/kernel/registries/plugin-independent-operation.md`。
 
 读取：
 

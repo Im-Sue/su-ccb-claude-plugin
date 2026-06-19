@@ -79,7 +79,7 @@ enums:
 
   legacy_phase:
     description: |
-      Console 兼容用 phase 投影。v0.3.2 期间持久化于 DB，v0.4 将删除。
+      历史 phase 投影兼容值。当前仅作为派生投影 / 兼容参考，
       不允许由用户手写；由 server-side 从 current_node + node_substate 派生。
     values:
       - requirement
@@ -274,56 +274,7 @@ dev_task:
       description: SubTask 预期实施方。UI/文档类任务可为 claude，协议/后端/迁移类任务可为 ccb_codex。
       adr0028_two_tier: true
 
-    legacy_kind:
-      type: string
-      required: false
-      writer: migration
-      description: 历史迁移前的旧分类，供审计与回滚。
-      v050_new: true
-
-    legacy_parent_hint:
-      type: string
-      required: false
-      writer: migration
-      description: 启发式迁移推断 parentEpicId 的证据文本。
-      v050_new: true
-
-    migration_batch_id:
-      type: string
-      required: false
-      writer: migration
-      description: 本次 hierarchy 迁移批次 ID。
-      v050_new: true
-
-    migration_rule_id:
-      type: string
-      required: false
-      writer: migration
-      description: 命中的启发式分类规则 ID。
-      v050_new: true
-
-    migration_confidence:
-      type: float
-      required: false
-      writer: migration
-      description: 迁移置信度，范围 0.0-1.0；低置信记录必须人工 review。
-      v050_new: true
-
-    migration_reviewed_by:
-      type: string
-      required: false
-      writer: migration-review
-      description: 人工确认低置信分类的 reviewer。
-      v050_new: true
-
-    migration_reviewed_at:
-      type: iso-8601
-      required: false
-      writer: migration-review
-      description: 人工确认时间。
-      v050_new: true
-
-    # --- 兼容投影字段（v0.4 删除）---
+    # --- 兼容投影字段 ---
     phase_projection:
       type: enum.legacy_phase
       required: false
@@ -331,9 +282,8 @@ dev_task:
       description: |
         v0.3.2 兼容字段，由 current_node + node_substate 派生。
         Console PATCH 接口必须拒绝用户写入此字段。
-        v0.4 终态：DB 列删除，仅 API 暴露派生值。
+        当前保留为派生兼容投影，不作为用户可写状态源。
       v032_new: true
-      v04_deprecated: true
 
     # --- 旧字段（v0.3.1 已有，保留）---
     status:
@@ -350,8 +300,7 @@ dev_task:
       type: string
       required: false
       writer: mark_waiting primitive
-      description: 已被 runtime_state 覆盖；v0.3.2 兼容保留
-      v04_deprecated: true
+      description: 已被 runtime_state 覆盖；仅作 v0.3.2 兼容保留，不建议新写入
 
     # --- 评估结果 ---
     scope_assessment:
@@ -803,7 +752,7 @@ persistence:
     cas_rule: EventJournal append-only idempotency
 
 # -----------------------------------------------------------------------------
-# 5. v0.3.2 ↔ v0.4 演进路线
+# 5. 历史演进与兼容说明
 # -----------------------------------------------------------------------------
 evolution:
 
@@ -828,27 +777,15 @@ evolution:
     - dev_task.section_id
     - dev_task.order
     - dev_task.implementation_owner
-    - dev_task.legacy_kind
-    - dev_task.legacy_parent_hint
-    - dev_task.migration_batch_id
-    - dev_task.migration_rule_id
-    - dev_task.migration_confidence
-    - dev_task.migration_reviewed_by
-    - dev_task.migration_reviewed_at
 
   v051_changed:
     - dev_task.status values narrowed to reviewing/done/cancelled
     - current_node owns flow position
     - runtime_state + node_substate + batch_state.active_waiting_set own waiting/escalation/replan state
 
-  v032_kept_for_compat:
+  compatibility_kept:
     - dev_task.waiting_state # 与 runtime_state 并存
-    - dev_task.phase_projection # v0.4 删除
-
-  v04_will_delete:
-    - dev_task.phase_projection (DB 列)
-    - dev_task.waiting_state    (合并入 runtime_state)
-    - Console DB Task.phase 列
+    - dev_task.phase_projection # server-side 派生兼容投影
 
 # -----------------------------------------------------------------------------
 # 5b. Artifact namespaces（capability required_artifacts 引用源）
@@ -984,7 +921,6 @@ write_authority:
       - escalate_to_human        # 写 runtime_state
       - replan_from_review       # 写 rollback_origin / node_substate
       - task_breakdown_materialize # 写 requirement_id / section_id / order / implementation_owner
-      - migration_apply          # 写 legacy_* / migration_* / hierarchy 字段
 
     scheduler_can_write:
       - current_node             # 节点转移

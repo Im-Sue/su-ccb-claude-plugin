@@ -137,7 +137,7 @@ import {
 
 ## 4. Plugin 独立运行约定
 
-本 skill 不调用 Console 业务写入接口。定位上下文时先读 `docs/00_项目总览.md`、`docs/00_文档地图.md` 和 `docs/.ccb/docs-structure-contract.yaml`；业务文档落点必须经 docs-structure resolver / 目录契约定位。人读 docs 文档是业务真相，`.ccb` 只承载协调和索引投影：
+遵循 `references/kernel/registries/plugin-independent-operation.md`。人读 docs 文档是业务真相。本 skill 直接读写：
 
 1. Requirement 文档：经 resolver 定位 `requirement`，当前契约落点为 `docs/02_需求设计/`。
 2. 技术设计 / 开发任务文档：经 resolver 定位 `technical_design` / `dev_task`，当前契约落点为 `docs/03_开发计划/`。

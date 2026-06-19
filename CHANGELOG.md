@@ -55,7 +55,7 @@ CCB v1.0 plugin sovereignty 正式发布。Plugin 是主系统，Console 是可�
 
 ### Changed
 - Subtask spec schema documentation now states that dynamic status fields are initial-state fallback only; runtime projection is overridden by task-state files.
-- Manual `business-rules.mjs` files now delegate to `generated-validator.mjs` (handwritten layer marked deprecated for v1.x removal).
+- Runtime validation remains in `lib/runtime/schema-validate.mjs` and focused business-rule modules; generated validators provide the ADR-0026 cross-runtime baseline for plugin / Console parity.
 - Console sovereignty cleanup: retired scheduler/outbox/drift write paths, projected plugin EventJournal into Console history, wired business state edits through anchor dispatch / generated validators.
 
 ### Removed (v1.0 clean start)

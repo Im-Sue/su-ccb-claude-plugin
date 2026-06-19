@@ -79,15 +79,7 @@ status: active
 
 **拍板项扫描约定 v1**：
 
-<!-- PAIBAN-SCAN-CONVENTION v1 START -->
-放行前对「本节点在手文件」（各节点的"在手文件"定义见所在 manifest）执行【拍板项扫描约定 v1】：对在手文件运行 §钉死物件 2 的 rg pattern；命中处逐一人工裁决，归入三类之一才放行：① 已闭环拍板记录（含答案与理由）；② 非用户项（纯技术 / 中性词误命中）；③ 已显式移交下一节点的技术项。任一命中无法归类即阻塞，回对应节点在终端问到答案。机器辅助定位、人工裁决语义，不做语义硬判。
-<!-- PAIBAN-SCAN-CONVENTION v1 END -->
-
-扫描 pattern：
-
-```text
-待用户|待谁定|TBD|TODO|后续确认|待(确认|拍板|定|澄清|商榷|评估|回复|补充|明确|决)|未(定|决|确认|澄清|明确)|尚未(确定|明确|拍板|确认)|仍需(用户)?确认|需(用户)?(确认|拍板|澄清|回复|补充|明确|决策|授权)|等待用户(确认|拍板|裁决|仲裁|回复)
-```
+在手文件 = 本次归档 dev_task + requirement 收尾文档。扫描规则和「钉死物件 2：rg pattern」以 `references/kernel/registries/paiban-scan-convention.md` 为 canonical 源。
 
 ## ③ 什么时候算这个模式完成？
 
@@ -231,6 +223,8 @@ Done.
 
 **常见打回原因**：
 
+通用打回原因见 `references/kernel/registries/node-handbook-conventions.md`；下列为本节点特有原因：
+
 1. Review 未 pass 却普通归档。
 2. 只有“完成了”，没有证据。
 3. 没有记录未覆盖项。
@@ -239,5 +233,4 @@ Done.
 6. 归档报告包含敏感信息。
 7. 没有 Requirement rollup。
 8. Codex 没有检查归档完整性。
-9. sc 不可用但没有替代说明。
-10. 后续 agent 无法从归档恢复上下文。
+9. 后续 agent 无法从归档恢复上下文。

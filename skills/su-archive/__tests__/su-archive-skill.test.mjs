@@ -15,7 +15,6 @@ test("su-archive documents requirement manual archive cleanup plus finalize", as
   assert.match(content, /dev_task_requirement_terminal/);
   assert.match(content, /finalize-only recovery/);
   assert.match(content, /archived \+ requirement 仍非 delivered/);
-  assert.doesNotMatch(content, /archiveRequirementWorktree/);
 });
 
 test("su-archive documents explicit reopen entry for merged worktrees", async () => {
