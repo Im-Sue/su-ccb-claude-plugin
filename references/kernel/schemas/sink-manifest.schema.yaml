@@ -1,0 +1,52 @@
+schema_name: sink-manifest
+kind: object
+description: |
+  Project-level money sink manifest for collaboration classifier.
+  The kernel defines shape only; each project owns concrete sink entries.
+
+required:
+  - schema_version
+  - project_family
+  - sinks
+
+fields:
+  schema_version:
+    type: enum
+    values: [sink-manifest-v0.1]
+    required: true
+  project_family:
+    type: string
+    required: true
+  sinks:
+    type: array<object>
+    required: true
+    min_items: 1
+    item_required:
+      - sink_id
+      - domain
+      - default_action
+      - service
+      - table
+      - api
+      - event
+      - topic
+    item_fields:
+      sink_id:
+        type: string
+      domain:
+        type: string
+      default_action:
+        type: enum
+        values: [read, consumer, implement, write, settle, refund, freeze, unknown]
+      service:
+        type: array<string>
+      table:
+        type: array<string>
+      api:
+        type: array<string>
+      event:
+        type: array<string>
+      topic:
+        type: array<string>
+      notes:
+        type: string

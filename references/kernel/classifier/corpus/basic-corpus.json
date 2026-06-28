@@ -1,0 +1,157 @@
+{
+  "schema_version": "classifier-corpus-v0.1",
+  "description": "Basic L1 corpus for collaboration classifier. L2 analyzers may reuse these cases as stable fixtures.",
+  "cases": [
+    {
+      "id": "l1_create_table_additive",
+      "description": "CREATE TABLE is additive at L1.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "new file mode 100644",
+        "index 0000000..1111111",
+        "--- /dev/null",
+        "+++ b/sql/topic.sql",
+        "@@ -0,0 +1,6 @@",
+        "+CREATE TABLE market_topic (",
+        "+  id bigint NOT NULL,",
+        "+  name varchar(64) NULL",
+        "+);"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "table", "change": "additive", "floor": "lite", "source": "l1.sql.create_table" }
+      }
+    },
+    {
+      "id": "l1_alter_add_nullable_additive",
+      "description": "ALTER ADD nullable column is additive at L1.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1,2 +1,3 @@",
+        "+ALTER TABLE market_topic ADD COLUMN display_name varchar(64) NULL;"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "table", "change": "additive", "floor": "lite", "source": "l1.sql.alter_add_nullable" }
+      }
+    },
+    {
+      "id": "l1_new_controller_additive",
+      "description": "New controller file is additive at L1.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "new file mode 100644",
+        "index 0000000..3333333",
+        "--- /dev/null",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -0,0 +1,8 @@",
+        "+public class TopicController {",
+        "+  public TopicRespVO getTopic(Long id) {",
+        "+    return null;",
+        "+  }",
+        "+}"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "api", "change": "additive", "floor": "lite", "source": "l1.path.new_controller" }
+      }
+    },
+    {
+      "id": "l1_alter_drop_breaking",
+      "description": "ALTER DROP is breaking and floors to full.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 2222222..3333333 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1 +1 @@",
+        "+ALTER TABLE market_topic DROP COLUMN display_name;"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "table", "change": "breaking", "floor": "full", "source": "l1.sql.alter_breaking" }
+      }
+    },
+    {
+      "id": "l1_api_package_breaking",
+      "description": "Any *-api path diff is treated as full-surface in L1.",
+      "diff_lines": [
+        "diff --git a/yudao-module-market-api/src/main/java/com/acme/api/PointApi.java b/yudao-module-market-api/src/main/java/com/acme/api/PointApi.java",
+        "index 1111111..2222222 100644",
+        "--- a/yudao-module-market-api/src/main/java/com/acme/api/PointApi.java",
+        "+++ b/yudao-module-market-api/src/main/java/com/acme/api/PointApi.java",
+        "@@ -1,4 +1,5 @@",
+        "+public interface PointApi {",
+        "+}"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "api", "change": "breaking", "floor": "full", "source": "l1.path.api_package" }
+      }
+    },
+    {
+      "id": "l1_existing_method_signature_breaking",
+      "description": "Existing Java method signature change is breaking and floors to full.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/TopicController.java",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -8,7 +8,7 @@ public class TopicController {",
+        "-  public TopicRespVO getTopic(Long id) {",
+        "+  public TopicRespVO getTopic(Long id, Boolean includeStats) {",
+        "     return null;",
+        "   }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "api", "change": "breaking", "floor": "full", "source": "l1.java.method_signature" }
+      }
+    },
+    {
+      "id": "coverage_partial_mybatis_xml",
+      "description": "MyBatis XML requires L2 and therefore cannot stay lite.",
+      "diff_lines": [
+        "diff --git a/src/main/resources/mapper/PointMapper.xml b/src/main/resources/mapper/PointMapper.xml",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/resources/mapper/PointMapper.xml",
+        "+++ b/src/main/resources/mapper/PointMapper.xml",
+        "@@ -1,3 +1,5 @@",
+        "+<update id=\"addPoint\">",
+        "+  UPDATE point_account SET balance = balance + #{amount}",
+        "+</update>"
+      ],
+      "expected": {
+        "classifier_coverage": "partial",
+        "minimum_tier": "standard",
+        "partial_surface": "mybatis_xml"
+      }
+    },
+    {
+      "id": "coverage_partial_alter_add_not_null_default",
+      "description": "ALTER ADD NOT NULL DEFAULT is not nullable-additive in L1 and therefore cannot stay lite.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1 +1 @@",
+        "+ALTER TABLE market_topic ADD COLUMN status tinyint NOT NULL DEFAULT 0;"
+      ],
+      "expected": {
+        "classifier_coverage": "partial",
+        "minimum_tier": "standard",
+        "partial_surface": "sql_alter_add_requires_ast"
+      }
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": "sink-manifest-v0.1",
+  "project_family": "yudao",
+  "sinks": [
+    {
+      "sink_id": "wallet",
+      "domain": "wallet",
+      "default_action": "write",
+      "service": ["*WalletService", "*WalletTransactionService", "*WalletBalanceService"],
+      "table": ["pay_wallet", "pay_wallet_transaction", "member_wallet", "member_wallet_transaction"],
+      "api": ["*WalletApi"],
+      "event": ["Wallet*Event"],
+      "topic": ["wallet.*"],
+      "notes": "Balance and wallet transaction writes are money-sink writes."
+    },
+    {
+      "sink_id": "order",
+      "domain": "order",
+      "default_action": "write",
+      "service": ["*OrderService", "*TradeOrderService", "*PayOrderService"],
+      "table": ["trade_order", "trade_order_item", "pay_order", "pay_order_extension"],
+      "api": ["*OrderApi", "*PayOrderApi"],
+      "event": ["Order*Event", "PayOrder*Event"],
+      "topic": ["order.*", "pay.order.*"],
+      "notes": "Order writes can affect settlement and payment reconciliation."
+    },
+    {
+      "sink_id": "settlement",
+      "domain": "settlement",
+      "default_action": "settle",
+      "service": ["*SettlementService", "*SettleService", "*DistributionService"],
+      "table": ["trade_settlement", "market_settlement", "brokerage_record", "brokerage_withdraw"],
+      "api": ["*SettlementApi", "*BrokerageApi"],
+      "event": ["Settlement*Event", "Brokerage*Event"],
+      "topic": ["settlement.*", "brokerage.*"],
+      "notes": "Settlement implementations are full-risk money-sink changes."
+    },
+    {
+      "sink_id": "point-account",
+      "domain": "point-account",
+      "default_action": "write",
+      "service": ["*PointAccountService", "*PointRecordService", "*PointService"],
+      "table": ["member_point_record", "point_account", "point_record", "points_account", "points_record"],
+      "api": ["*PointApi", "*PointAccountApi"],
+      "event": ["Point*Event"],
+      "topic": ["point.*", "points.*"],
+      "notes": "Point account writes behave like money-sink writes in prediction-market flows."
+    },
+    {
+      "sink_id": "ledger",
+      "domain": "ledger",
+      "default_action": "write",
+      "service": ["*LedgerService", "*BillService", "*TransactionRecordService"],
+      "table": ["account_ledger", "wallet_ledger", "pay_transaction", "transaction_record", "fund_flow"],
+      "api": ["*LedgerApi", "*BillApi"],
+      "event": ["Ledger*Event", "Transaction*Event"],
+      "topic": ["ledger.*", "transaction.*", "fund-flow.*"],
+      "notes": "Ledger and flow records are audit-critical even when balance is not directly changed."
+    },
+    {
+      "sink_id": "freeze",
+      "domain": "freeze",
+      "default_action": "freeze",
+      "service": ["*FreezeService", "*FrozenService", "*LockAmountService"],
+      "table": ["wallet_freeze", "frozen_amount", "account_freeze", "point_freeze"],
+      "api": ["*FreezeApi", "*FrozenApi"],
+      "event": ["Freeze*Event", "Frozen*Event"],
+      "topic": ["freeze.*", "frozen.*"],
+      "notes": "Freeze/unfreeze changes affect spendable balance and must not be treated as read-only."
+    },
+    {
+      "sink_id": "refund",
+      "domain": "refund",
+      "default_action": "refund",
+      "service": ["*RefundService", "*PayRefundService", "*AfterSaleService"],
+      "table": ["pay_refund", "trade_after_sale", "refund_record"],
+      "api": ["*RefundApi", "*AfterSaleApi"],
+      "event": ["Refund*Event", "AfterSale*Event"],
+      "topic": ["refund.*", "after-sale.*"],
+      "notes": "Refund writes reverse payment/order state and require strict classification."
+    }
+  ]
+}
