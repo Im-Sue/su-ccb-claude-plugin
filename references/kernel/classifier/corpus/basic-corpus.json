@@ -1,6 +1,6 @@
 {
   "schema_version": "classifier-corpus-v0.1",
-  "description": "Basic L1/L2-A corpus for collaboration classifier. Later L2 analyzers may reuse these cases as stable fixtures.",
+  "description": "Basic L1/L2-A/L2-B corpus for collaboration classifier. Later L2 analyzers may reuse these cases as stable fixtures.",
   "cases": [
     {
       "id": "l1_create_table_additive",
@@ -115,6 +115,60 @@
         "classifier_coverage": "full",
         "minimum_tier": "full",
         "surface": { "type": "api", "change": "breaking", "floor": "full", "source": "l1.java.method_signature" }
+      }
+    },
+    {
+      "id": "l2_shadow_route_standard",
+      "description": "New Spring route overlaps an existing route pattern and must not be lite.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/TopicController.java",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -1,8 +1,13 @@",
+        " @RequestMapping(\"/market/topic\")",
+        " public class TopicController {",
+        "   @GetMapping(\"/export\")",
+        "   public TopicRespVO exportTopic() {",
+        "     return null;",
+        "   }",
+        "+  @GetMapping(\"/{id}\")",
+        "+  public TopicRespVO getById(Long id) {",
+        "+    return null;",
+        "+  }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "api", "change": "shadow_route", "floor": "standard", "source": "l2.route.shadow_route" }
+      }
+    },
+    {
+      "id": "l2_new_endpoint_additive_lite",
+      "description": "Pure new Spring endpoint in an existing controller stays additive.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/TopicController.java",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -1,8 +1,13 @@",
+        " @RequestMapping(\"/market/topic\")",
+        " public class TopicController {",
+        "   @GetMapping(\"/page\")",
+        "   public PageResult<TopicRespVO> page(TopicPageReqVO reqVO) {",
+        "     return null;",
+        "   }",
+        "+  @PostMapping(\"/create\")",
+        "+  public Long createTopic(TopicCreateReqVO reqVO) {",
+        "+    return 1L;",
+        "+  }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "api", "change": "additive", "floor": "lite", "source": "l2.route.additive_endpoint" }
       }
     },
     {
