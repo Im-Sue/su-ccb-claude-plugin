@@ -6,6 +6,7 @@ introduced_by: ADR-0030
 status: active
 ---
 
+> 本节点协作强度受 capability `collaboration.profile` 档位（full/standard/lite）门控；产物下限见 `references/kernel/traceability-policy.md`；`needs_consult`/红旗/hard-list 经 `semantic_overrides` 强制协商；sc 全档恒做（pr9）。
 # 节点：派工
 
 ## ① 什么时候进入这个模式？
@@ -63,7 +64,7 @@ per-需求实施空间是 dispatch 前置生命周期动作，不是 Codex 执�
 
 1. dispatch brief 已写清目标、范围、边界、验收和回执格式。
 2. 所有命中的必问项已处理，且在手文件不存在未闭环待用户拍板项。
-3. 至少 1 轮 Codex 协商完成，且已根据反馈修订 brief 或说明不采纳理由。
+3. 协商按 `collaboration.profile` 档位完成（lite 默认关、可叫回；红旗/hard-list 强制），且已据反馈修订 brief 或说明不采纳理由。
 4. 4 段反思已记录。
 5. 派工已提交、或明确因阻塞而 deferred。
 6. EventJournal 有可追踪记录。

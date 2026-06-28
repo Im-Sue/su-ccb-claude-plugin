@@ -6,6 +6,7 @@ introduced_by: ADR-0030
 status: active
 ---
 
+> 本节点协作强度受 capability `collaboration.profile` 档位（full/standard/lite）门控；产物下限见 `references/kernel/traceability-policy.md`；`needs_consult`/红旗/hard-list 经 `semantic_overrides` 强制协商；sc 全档恒做（pr9）。
 # 节点：任务拆分
 
 ## ① 什么时候进入这个模式？
@@ -56,7 +57,7 @@ status: active
 1. breakdown draft 已写入 `docs/.ccb/drafts/breakdown/<requirementId>.json` 或项目约定路径。
 2. 每个子任务包含标题、目标、范围、验收、边界、依赖和建议 owner。
 3. 所有命中的必问项已处理，尤其是业务规则、执行顺序、合并/拆分策略。
-4. 至少 1 轮 Codex 协商完成，且 Codex 从执行可行性角度给出判断。
+4. 协商按 `collaboration.profile` 档位完成（lite 默认关、可叫回；红旗/hard-list 强制），Codex 从执行可行性角度给出判断。
 5. 至少 1 段 4 锚点反思说明切片如何变化。
 6. 用户审查门已明确：等待用户确认、或用户已授权 materialize。
 7. EventJournal 可追溯 draft 生成来源。

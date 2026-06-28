@@ -6,6 +6,7 @@ introduced_by: ADR-0030
 status: active
 ---
 
+> 本节点协作强度受 capability `collaboration.profile` 档位（full/standard/lite）门控；产物下限见 `references/kernel/traceability-policy.md`；`needs_consult`/红旗/hard-list 经 `semantic_overrides` 强制协商；sc 全档恒做（pr9）。
 # 节点：审查
 
 ## ① 什么时候进入这个模式？
@@ -60,7 +61,7 @@ Review 的核心不是礼貌性验收，而是替用户判断“这份实现是�
 
 1. 每条验收都有 pass/fail/unknown 判断和理由。
 2. 所有命中的必问项已处理，且在手文件不存在未闭环待用户拍板项。
-3. 至少 1 轮协商和 1 段 4 锚点反思已记录。
+3. 协商与反思按 `collaboration.profile` 档位完成（full 全套；lite 默认关、可叫回；红旗/hard-list 经 `semantic_overrides` 强制开）。
 4. 已明确 review decision：pass、request changes、replan 或 escalate。
 5. 若通过，剩余风险已写清。
 6. 若返工，返工 brief 可直接派发。
