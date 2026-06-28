@@ -1,6 +1,6 @@
 {
   "schema_version": "classifier-corpus-v0.1",
-  "description": "Basic L1 corpus for collaboration classifier. L2 analyzers may reuse these cases as stable fixtures.",
+  "description": "Basic L1/L2-A corpus for collaboration classifier. Later L2 analyzers may reuse these cases as stable fixtures.",
   "cases": [
     {
       "id": "l1_create_table_additive",
@@ -118,8 +118,8 @@
       }
     },
     {
-      "id": "coverage_partial_mybatis_xml",
-      "description": "MyBatis XML requires L2 and therefore cannot stay lite.",
+      "id": "l2_mybatis_write_statement",
+      "description": "MyBatis XML write statement is classified by L2-A and no longer remains partial.",
       "diff_lines": [
         "diff --git a/src/main/resources/mapper/PointMapper.xml b/src/main/resources/mapper/PointMapper.xml",
         "index 1111111..2222222 100644",
@@ -131,14 +131,14 @@
         "+</update>"
       ],
       "expected": {
-        "classifier_coverage": "partial",
+        "classifier_coverage": "full",
         "minimum_tier": "standard",
-        "partial_surface": "mybatis_xml"
+        "surface": { "type": "table", "change": "mapper_write_statement", "floor": "standard", "source": "l2.mybatis.write_statement" }
       }
     },
     {
-      "id": "coverage_partial_alter_add_not_null_default",
-      "description": "ALTER ADD NOT NULL DEFAULT is not nullable-additive in L1 and therefore cannot stay lite.",
+      "id": "l2_alter_add_not_null_default_standard",
+      "description": "ALTER ADD NOT NULL DEFAULT is classified by SQL AST and must not be lite.",
       "diff_lines": [
         "diff --git a/sql/topic.sql b/sql/topic.sql",
         "index 1111111..2222222 100644",
@@ -148,9 +148,44 @@
         "+ALTER TABLE market_topic ADD COLUMN status tinyint NOT NULL DEFAULT 0;"
       ],
       "expected": {
-        "classifier_coverage": "partial",
+        "classifier_coverage": "full",
         "minimum_tier": "standard",
-        "partial_surface": "sql_alter_add_requires_ast"
+        "surface": { "type": "table", "change": "schema_semantic", "floor": "standard", "source": "l2.sql.add_not_null_default" }
+      }
+    },
+    {
+      "id": "l2_create_unique_index_standard",
+      "description": "New UNIQUE index is classified by SQL AST and must not be lite.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1 +1 @@",
+        "+CREATE UNIQUE INDEX uk_market_topic_code ON market_topic (code);"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "table", "change": "constraint", "floor": "standard", "source": "l2.sql.create_unique_index" }
+      }
+    },
+    {
+      "id": "l2_sql_backfill_full",
+      "description": "SQL data backfill is full risk.",
+      "diff_lines": [
+        "diff --git a/sql/backfill-topic.sql b/sql/backfill-topic.sql",
+        "new file mode 100644",
+        "--- /dev/null",
+        "+++ b/sql/backfill-topic.sql",
+        "@@ -0,0 +1,2 @@",
+        "+-- backfill existing rows; no rollback",
+        "+UPDATE market_topic SET status = 0 WHERE status IS NULL;"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "table", "change": "data_migration", "floor": "full", "source": "l2.sql.backfill" }
       }
     }
   ]
