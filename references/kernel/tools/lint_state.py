@@ -44,6 +44,20 @@ CANONICAL_CONSISTENCY_CLASSES = {
     "u1_u4_settled",
 }
 ENGINEERING_DECIDERS = {"claude", "codex_recommended", "codex-recommended"}
+COLLABORATION_TIERS = {"full", "standard", "lite"}
+CLASSIFIER_COVERAGE = {"full", "partial"}
+COLLABORATION_PASSES = {"planned", "actual"}
+SEMANTIC_OVERRIDE_TYPES = {"consult_only", "consult_plus_decision_record", "tier_floor"}
+VERIFICATION_MINIMUMS = {"static", "targeted", "targeted_plus_edge", "integration", "full"}
+RISK_SURFACE_TYPES = {"table", "api", "money_sink", "permission_scope"}
+RISK_ENVELOPE_STATUSES = {"open", "partially_closed", "closed"}
+ARTIFACT_MINIMA_FIELDS = {"requirement", "technical_design", "dev_task", "review", "archive"}
+RISK_CLOSE_EVIDENCE_BY_SURFACE = {
+    "table": {"migration_verified_ref", "rollback_or_compat_ref"},
+    "api": {"contract_test_ref", "backward_compat_ref"},
+    "money_sink": {"invariant_ref", "idempotency_ref", "reconciliation_ref"},
+    "permission_scope": {"authz_matrix_ref", "privilege_negative_test_ref"},
+}
 
 
 def is_blank(value: Any) -> bool:
@@ -77,6 +91,14 @@ def resolve_repo_path(root: Path, raw: Any) -> Path | None:
 
 def non_empty_list(value: Any) -> bool:
     return isinstance(value, list) and len(value) > 0
+
+
+def non_empty_string(value: Any) -> bool:
+    return isinstance(value, str) and value.strip() != ""
+
+
+def is_string_list(value: Any) -> bool:
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
 
 
 def lint_policy_profile(frontmatter: dict[str, Any], warn, error) -> None:
@@ -183,6 +205,144 @@ def lint_engineering_decidable_decisions(frontmatter: dict[str, Any], error) -> 
             error("state_engineering_decidable_decider", f"{prefix}.decided_by 必须是 claude/codex_recommended")
 
 
+def lint_collaboration_profile(frontmatter: dict[str, Any], error) -> None:
+    profile = frontmatter.get("collaboration_profile")
+    if profile is None:
+        return
+    if not isinstance(profile, dict):
+        error("state_collaboration_profile_type", "collaboration_profile 必须是对象")
+        return
+
+    required = [
+        "ceremony_tier",
+        "classifier_coverage",
+        "pass",
+        "consult_required",
+        "semantic_overrides",
+        "artifact_minima",
+        "verification_minimum",
+        "risk_basis",
+        "negative_evidence",
+        "waivers",
+        "evidence_refs",
+    ]
+    missing = [name for name in required if name not in profile]
+    if missing:
+        error("state_collaboration_profile_required_fields", f"collaboration_profile 缺少必需字段: {', '.join(missing)}")
+
+    if profile.get("ceremony_tier") not in COLLABORATION_TIERS:
+        error("state_collaboration_profile_tier", "collaboration_profile.ceremony_tier 必须是 full/standard/lite")
+    if profile.get("classifier_coverage") not in CLASSIFIER_COVERAGE:
+        error("state_collaboration_profile_coverage", "collaboration_profile.classifier_coverage 必须是 full/partial")
+    if profile.get("pass") not in COLLABORATION_PASSES:
+        error("state_collaboration_profile_pass", "collaboration_profile.pass 必须是 planned/actual")
+    if not isinstance(profile.get("consult_required"), bool):
+        error("state_collaboration_profile_consult_required", "collaboration_profile.consult_required 必须是 bool")
+    if profile.get("verification_minimum") not in VERIFICATION_MINIMUMS:
+        error("state_collaboration_profile_verification", "collaboration_profile.verification_minimum 非法")
+    if not non_empty_string(profile.get("risk_basis")):
+        error("state_collaboration_profile_risk_basis", "collaboration_profile.risk_basis 必须是非空字符串")
+
+    overrides = profile.get("semantic_overrides")
+    if not isinstance(overrides, list):
+        error("state_collaboration_profile_overrides", "collaboration_profile.semantic_overrides 必须是数组")
+    else:
+        for index, override in enumerate(overrides):
+            prefix = f"collaboration_profile.semantic_overrides[{index}]"
+            if not isinstance(override, dict):
+                error("state_collaboration_profile_override_type", f"{prefix} 必须是对象")
+                continue
+            if not non_empty_string(override.get("trigger")):
+                error("state_collaboration_profile_override_trigger", f"{prefix}.trigger 必须是非空字符串")
+            if override.get("type") not in SEMANTIC_OVERRIDE_TYPES:
+                error("state_collaboration_profile_override_type", f"{prefix}.type 非法")
+
+    artifact_minima = profile.get("artifact_minima")
+    if not isinstance(artifact_minima, dict):
+        error("state_collaboration_profile_artifact_minima", "collaboration_profile.artifact_minima 必须是对象")
+    else:
+        missing_artifacts = sorted(ARTIFACT_MINIMA_FIELDS - set(artifact_minima.keys()))
+        if missing_artifacts:
+            error(
+                "state_collaboration_profile_artifact_minima_fields",
+                f"collaboration_profile.artifact_minima 缺少字段: {', '.join(missing_artifacts)}",
+            )
+        for name in sorted(ARTIFACT_MINIMA_FIELDS & set(artifact_minima.keys())):
+            if not non_empty_string(artifact_minima.get(name)):
+                error("state_collaboration_profile_artifact_minima_value", f"artifact_minima.{name} 必须是非空字符串")
+
+    if not is_string_list(profile.get("negative_evidence")):
+        error("state_collaboration_profile_negative_evidence", "collaboration_profile.negative_evidence 必须是字符串数组")
+    if not is_string_list(profile.get("evidence_refs")):
+        error("state_collaboration_profile_evidence_refs", "collaboration_profile.evidence_refs 必须是字符串数组")
+
+    waivers = profile.get("waivers")
+    if not isinstance(waivers, list):
+        error("state_collaboration_profile_waivers", "collaboration_profile.waivers 必须是数组")
+    else:
+        for index, waiver in enumerate(waivers):
+            prefix = f"collaboration_profile.waivers[{index}]"
+            if not isinstance(waiver, dict):
+                error("state_collaboration_profile_waiver_type", f"{prefix} 必须是对象")
+                continue
+            if not non_empty_string(waiver.get("action_or_artifact")):
+                error("state_collaboration_profile_waiver_action", f"{prefix}.action_or_artifact 必须是非空字符串")
+            if not non_empty_string(waiver.get("reason")):
+                error("state_collaboration_profile_waiver_reason", f"{prefix}.reason 必须是非空字符串")
+
+
+def lint_risk_envelope(frontmatter: dict[str, Any], error) -> None:
+    envelope = frontmatter.get("risk_envelope")
+    if envelope is None:
+        return
+    if not isinstance(envelope, list):
+        error("state_risk_envelope_type", "risk_envelope 必须是数组")
+        return
+
+    for index, item in enumerate(envelope):
+        prefix = f"risk_envelope[{index}]"
+        if not isinstance(item, dict):
+            error("state_risk_envelope_item_type", f"{prefix} 必须是对象")
+            continue
+
+        surface = item.get("surface_ref")
+        surface_type = None
+        if not isinstance(surface, dict):
+            error("state_risk_envelope_surface_ref", f"{prefix}.surface_ref 必须是对象")
+        else:
+            surface_type = surface.get("type")
+            if surface_type not in RISK_SURFACE_TYPES:
+                error("state_risk_envelope_surface_type", f"{prefix}.surface_ref.type 非法")
+            if not non_empty_string(surface.get("id")):
+                error("state_risk_envelope_surface_id", f"{prefix}.surface_ref.id 必须是非空字符串")
+
+        if not non_empty_string(item.get("opened_by")):
+            error("state_risk_envelope_opened_by", f"{prefix}.opened_by 必须是非空字符串")
+
+        status = item.get("status")
+        if status not in RISK_ENVELOPE_STATUSES:
+            error("state_risk_envelope_status", f"{prefix}.status 必须是 open/partially_closed/closed")
+
+        close_evidence = item.get("close_evidence")
+        if status == "open":
+            if close_evidence is not None and not isinstance(close_evidence, dict):
+                error("state_risk_envelope_close_evidence", f"{prefix}.close_evidence 必须是对象")
+            continue
+
+        if not isinstance(close_evidence, dict):
+            error("state_risk_envelope_close_evidence", f"{prefix}.close_evidence 在 partially_closed/closed 时必须是对象")
+            continue
+
+        required = RISK_CLOSE_EVIDENCE_BY_SURFACE.get(str(surface_type), set())
+        present_required = [name for name in required if non_empty_string(close_evidence.get(name))]
+        if status == "partially_closed" and required and not present_required:
+            error("state_risk_envelope_partial_evidence", f"{prefix}.close_evidence 至少需要 1 条 {surface_type} 类型关闭证据")
+        if status == "closed":
+            missing = sorted(name for name in required if not non_empty_string(close_evidence.get(name)))
+            if missing:
+                error("state_risk_envelope_closed_evidence", f"{prefix}.close_evidence 缺少 {surface_type} 类型必需字段: {', '.join(missing)}")
+
+
 def lint_state(path: Path, root: Path) -> list[Issue]:
     text = read_text(path)
     try:
@@ -253,6 +413,8 @@ def lint_state(path: Path, root: Path) -> list[Issue]:
 
     lint_policy_profile(frontmatter, warn, error)
     lint_engineering_decidable_decisions(frontmatter, error)
+    lint_collaboration_profile(frontmatter, error)
+    lint_risk_envelope(frontmatter, error)
 
     return issues
 
