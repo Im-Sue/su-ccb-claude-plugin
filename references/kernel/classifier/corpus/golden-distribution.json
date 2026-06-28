@@ -1,0 +1,242 @@
+{
+  "schema_version": "classifier-golden-v0.1",
+  "description": "Representative golden fixtures for collaboration_profile distribution regression. These approximate the real 25-demand corpus and guard against collapse to all-full or all-lite.",
+  "cases": [
+    {
+      "id": "golden_money_write_sql_full",
+      "category": "money-write",
+      "expected_tier": "full",
+      "diff_lines": [
+        "diff --git a/sql/point-adjust.sql b/sql/point-adjust.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/point-adjust.sql",
+        "+++ b/sql/point-adjust.sql",
+        "@@ -1 +1 @@",
+        "+UPDATE point_account SET balance = balance + 10 WHERE user_id = 1001;"
+      ]
+    },
+    {
+      "id": "golden_breaking_api_full",
+      "category": "breaking-contract",
+      "expected_tier": "full",
+      "diff_lines": [
+        "diff --git a/yudao-module-market-api/src/main/java/com/acme/api/MarketApi.java b/yudao-module-market-api/src/main/java/com/acme/api/MarketApi.java",
+        "index 1111111..2222222 100644",
+        "--- a/yudao-module-market-api/src/main/java/com/acme/api/MarketApi.java",
+        "+++ b/yudao-module-market-api/src/main/java/com/acme/api/MarketApi.java",
+        "@@ -1 +1 @@",
+        "+public interface MarketApi {}"
+      ]
+    },
+    {
+      "id": "golden_auth_model_full",
+      "category": "permission-scope",
+      "expected_tier": "full",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/AdminController.java b/src/main/java/com/acme/controller/AdminController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/AdminController.java",
+        "+++ b/src/main/java/com/acme/controller/AdminController.java",
+        "@@ -1,4 +1,5 @@",
+        " public class AdminController {",
+        "+  @PermitAll",
+        "+  public void exportSettlement() {}",
+        " }"
+      ]
+    },
+    {
+      "id": "golden_settlement_service_full",
+      "category": "money-implementation",
+      "expected_tier": "full",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/service/SettlementServiceImpl.java b/src/main/java/com/acme/service/SettlementServiceImpl.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/service/SettlementServiceImpl.java",
+        "+++ b/src/main/java/com/acme/service/SettlementServiceImpl.java",
+        "@@ -1,4 +1,5 @@",
+        " public class SettlementServiceImpl implements SettlementService {",
+        "+  public void settle(Long marketId) { settlementMapper.settle(marketId); }",
+        " }"
+      ]
+    },
+    {
+      "id": "golden_irreversible_backfill_full",
+      "category": "irreversible-data",
+      "expected_tier": "full",
+      "diff_lines": [
+        "diff --git a/sql/backfill-market.sql b/sql/backfill-market.sql",
+        "new file mode 100644",
+        "--- /dev/null",
+        "+++ b/sql/backfill-market.sql",
+        "@@ -0,0 +1,2 @@",
+        "+-- backfill existing rows; no rollback",
+        "+UPDATE market_topic SET status = 0 WHERE status IS NULL;"
+      ]
+    },
+    {
+      "id": "golden_money_api_consumer_standard",
+      "category": "money-api-consumer",
+      "expected_tier": "standard",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/service/TaskServiceImpl.java b/src/main/java/com/acme/service/TaskServiceImpl.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/service/TaskServiceImpl.java",
+        "+++ b/src/main/java/com/acme/service/TaskServiceImpl.java",
+        "@@ -1,4 +1,5 @@",
+        " public class TaskServiceImpl {",
+        "+  public void complete(Long userId) { pointApi.addPoint(userId, 10); }",
+        " }"
+      ]
+    },
+    {
+      "id": "golden_shadow_route_standard",
+      "category": "shadow-route",
+      "expected_tier": "standard",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/TopicController.java",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -1,8 +1,13 @@",
+        " @RequestMapping(\"/market/topic\")",
+        " public class TopicController {",
+        "   @GetMapping(\"/export\")",
+        "   public TopicRespVO exportTopic() { return null; }",
+        "+  @GetMapping(\"/{id}\")",
+        "+  public TopicRespVO getById(Long id) { return null; }",
+        " }"
+      ]
+    },
+    {
+      "id": "golden_not_null_default_standard",
+      "category": "schema-semantic",
+      "expected_tier": "standard",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1 +1 @@",
+        "+ALTER TABLE market_topic ADD COLUMN status tinyint NOT NULL DEFAULT 0;"
+      ]
+    },
+    {
+      "id": "golden_sensitive_config_standard",
+      "category": "sensitive-config",
+      "expected_tier": "standard",
+      "diff_lines": [
+        "diff --git a/config/application.yaml b/config/application.yaml",
+        "index 1111111..2222222 100644",
+        "--- a/config/application.yaml",
+        "+++ b/config/application.yaml",
+        "@@ -1 +1 @@",
+        "+point.reward.amount-threshold: 1000"
+      ]
+    },
+    {
+      "id": "golden_mq_money_standard",
+      "category": "mq-indirect-money",
+      "expected_tier": "standard",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/service/RewardPublisher.java b/src/main/java/com/acme/service/RewardPublisher.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/service/RewardPublisher.java",
+        "+++ b/src/main/java/com/acme/service/RewardPublisher.java",
+        "@@ -1,4 +1,5 @@",
+        " public class RewardPublisher {",
+        "+  public void publish(Long userId, Integer amount) { rocketMQTemplate.convertAndSend(\"point.adjust\", new PointAdjustEvent(userId, amount)); }",
+        " }"
+      ]
+    },
+    {
+      "id": "golden_enum_state_standard",
+      "category": "state-machine",
+      "expected_tier": "standard",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/enums/MarketStatusEnum.java b/src/main/java/com/acme/enums/MarketStatusEnum.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/enums/MarketStatusEnum.java",
+        "+++ b/src/main/java/com/acme/enums/MarketStatusEnum.java",
+        "@@ -1,4 +1,5 @@",
+        " public enum MarketStatusEnum {",
+        "+  SETTLEMENT_LOCKED,",
+        "   CLOSED",
+        " }"
+      ]
+    },
+    {
+      "id": "golden_create_table_lite",
+      "category": "additive-schema",
+      "expected_tier": "lite",
+      "diff_lines": [
+        "diff --git a/sql/market-comment.sql b/sql/market-comment.sql",
+        "new file mode 100644",
+        "--- /dev/null",
+        "+++ b/sql/market-comment.sql",
+        "@@ -0,0 +1,4 @@",
+        "+CREATE TABLE market_comment (",
+        "+  id bigint NOT NULL,",
+        "+  content varchar(255) NULL",
+        "+);"
+      ]
+    },
+    {
+      "id": "golden_nullable_column_lite",
+      "category": "additive-schema",
+      "expected_tier": "lite",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1 +1 @@",
+        "+ALTER TABLE market_topic ADD COLUMN display_name varchar(64) NULL;"
+      ]
+    },
+    {
+      "id": "golden_new_controller_lite",
+      "category": "additive-crud",
+      "expected_tier": "lite",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/CommentController.java b/src/main/java/com/acme/controller/CommentController.java",
+        "new file mode 100644",
+        "--- /dev/null",
+        "+++ b/src/main/java/com/acme/controller/CommentController.java",
+        "@@ -0,0 +1,5 @@",
+        "+public class CommentController {",
+        "+  public CommentRespVO getComment(Long id) {",
+        "+    return null;",
+        "+  }",
+        "+}"
+      ]
+    },
+    {
+      "id": "golden_i18n_lite",
+      "category": "i18n",
+      "expected_tier": "lite",
+      "diff_lines": [
+        "diff --git a/src/main/resources/i18n/messages_zh_CN.properties b/src/main/resources/i18n/messages_zh_CN.properties",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/resources/i18n/messages_zh_CN.properties",
+        "+++ b/src/main/resources/i18n/messages_zh_CN.properties",
+        "@@ -1 +1 @@",
+        "+market.topic.title=Topic title"
+      ]
+    },
+    {
+      "id": "golden_sink_read_lite",
+      "category": "read-only-money",
+      "expected_tier": "lite",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/service/ProfileServiceImpl.java b/src/main/java/com/acme/service/ProfileServiceImpl.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/service/ProfileServiceImpl.java",
+        "+++ b/src/main/java/com/acme/service/ProfileServiceImpl.java",
+        "@@ -1,4 +1,5 @@",
+        " public class ProfileServiceImpl {",
+        "+  public WalletRespVO show(Long userId) { return walletApi.getWallet(userId); }",
+        " }"
+      ]
+    }
+  ]
+}
