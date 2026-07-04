@@ -110,6 +110,48 @@ capabilities:
       allowed_fallbacks: []
       forbidden_policies: [autonomous-batch]
 
+  - capability_id: collaboration.profile
+    display_name: 协作风险分级解析器
+    category: governance
+    criticality: governance_critical
+    description: |
+      读取 scope_assessment / decision_shape / red_flags 与 classifier touched_surfaces，
+      生成 option C collaboration_profile，并维护 risk_envelope carry-forward。
+      负责 planned/actual 两次判定、semantic_overrides 三型、verification_minimum、
+      artifact_minima、risk_basis、negative_evidence、waivers 与 EventJournal 留痕。
+    required_artifacts:
+      all_of: [task.description]
+    optional_artifacts:
+      - task.scope_assessment
+      - task.decision_shape
+      - task.open_red_flags
+      - task.collaboration_profile
+      - task.risk_envelope
+      - project.context
+    output_contract:
+      produces:
+        - task.collaboration_profile
+        - task.risk_envelope
+      evidence_fields:
+        - task.collaboration_profile.risk_basis
+        - task.collaboration_profile.negative_evidence
+        - task.collaboration_profile.evidence_refs
+    provider_bindings:
+      resolution_order: project_override_then_user_then_global
+      candidates:
+        - binding_id: kernel_collaboration_profile
+          provider: ccb-kernel
+          entrypoint: lib/collaboration-profile.resolveCollaborationProfile
+          role: primary
+        - binding_id: kernel_collaboration_profile_with_events
+          provider: ccb-kernel
+          entrypoint: lib/collaboration-profile.resolveAndAppendCollaborationProfile
+          role: primary
+    degradation:
+      default_action: escalate
+      allowed_fallbacks: []
+      forbidden_policies: [autonomous-batch]
+
   - capability_id: analysis.consult
     display_name: 独立专家协商（Codex consult）
     category: analysis

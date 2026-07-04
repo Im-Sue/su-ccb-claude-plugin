@@ -6,6 +6,7 @@ introduced_by: ADR-0030
 status: active
 ---
 
+> 本节点协作强度受 capability `collaboration.profile` 档位（full/standard/lite）门控；产物下限见 `references/kernel/traceability-policy.md`；`needs_consult`/红旗/hard-list 经 `semantic_overrides` 强制协商；sc 全档恒做（pr9）。
 # 节点：技术设计
 
 ## ① 什么时候进入这个模式？
@@ -85,7 +86,7 @@ status: active
 
 **为什么这些是硬约束**：
 
-技术设计决定后续拆分和实现方向。这里的错误通常不是单个 bug，而是整条执行链跑偏。强制 sc、强制协商和用户必问，是为了让方案在开工前被充分挑战。
+技术设计决定后续拆分和实现方向。这里的错误通常不是单个 bug，而是整条执行链跑偏。sc 全档恒做、协商按 `collaboration.profile` 档位（hard-list/红旗强制）和用户必问，是为了让方案在开工前被充分挑战。
 
 ## ⑤ 推荐的 sc 指令（本节点强烈推荐使用）
 

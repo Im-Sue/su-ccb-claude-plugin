@@ -6,6 +6,7 @@ introduced_by: ADR-0030
 status: active
 ---
 
+> 本节点协作强度受 capability `collaboration.profile` 档位（full/standard/lite）门控；产物下限见 `references/kernel/traceability-policy.md`；`needs_consult`/红旗/hard-list 经 `semantic_overrides` 强制协商；sc 全档恒做（pr9）。
 # 节点：需求分析
 
 ## ① 什么时候进入这个模式？
@@ -34,7 +35,7 @@ status: active
 2. 标出原文中的模糊词、绝对表述、隐含假设和未定义边界。
 3. 列出歧义清单，优先找至少 3 项；少于 3 项时说明为什么确实没有。
 4. 在进入节点后优先使用推荐 sc 指令增强判断。
-5. 用完整 framing 找 Codex 协商，v1.x 阶段任何需求都必须协商。
+5. 用完整 framing 找 Codex 协商，强度按 `collaboration.profile` 档位（full 全套；standard 一个最高杠杆协商点；lite 默认关、可叫回）；`needs_consult`/红旗/hard-list 经 `semantic_overrides` 强制协商；sc 全档恒做。
 6. 收到 Codex 回复后写 4 段反思：我同意的、我不同意的、我的盲点、接下来做什么。
 7. 按必问清单筛选命中的用户拍板项。
 8. 闭环问答规则：命中用户拍板项时，必须攒齐同批全部命中项，在当前终端一次性提问并阻塞等待用户答复；等待期不落正式档（不调用落档 lib）；Console 派发的 anchor 会话同样挂着等（anchor 是交互式 Claude TUI，非后台进程）。拿到答案后写入闭环记录（答案 + 理由）才落正式档。

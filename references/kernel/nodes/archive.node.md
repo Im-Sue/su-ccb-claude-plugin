@@ -6,6 +6,7 @@ introduced_by: ADR-0030
 status: active
 ---
 
+> 本节点协作强度受 capability `collaboration.profile` 档位（full/standard/lite）门控；产物下限见 `references/kernel/traceability-policy.md`；`needs_consult`/红旗/hard-list 经 `semantic_overrides` 强制协商；sc 全档恒做（pr9）。
 # 节点：归档
 
 ## ① 什么时候进入这个模式？
@@ -88,7 +89,7 @@ status: active
 1. Review 已 pass，或用户明确授权带风险归档。
 2. 归档记录已写入 dev_task 文档、EventJournal，必要时沉淀到 `docs/05_经验沉淀/` 或项目约定位置。
 3. 所有命中的必问项已处理，且在手文件不存在未闭环待用户拍板项。
-4. 至少 1 轮协商和 1 段 4 锚点反思已记录。
+4. 协商与反思按 `collaboration.profile` 档位完成（full 全套；lite 默认关、可叫回；红旗/hard-list 经 `semantic_overrides` 强制开）。
 5. 完成内容、验证证据、风险和后续事项都可追溯。
 6. Requirement / DeliveryUnit 状态投影已写入 plugin 真相源。
 7. EventJournal 有 archive_completed。

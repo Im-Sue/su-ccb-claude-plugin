@@ -6,6 +6,7 @@ introduced_by: ADR-0030
 status: active
 ---
 
+> 本节点协作强度受 capability `collaboration.profile` 档位（full/standard/lite）门控；产物下限见 `references/kernel/traceability-policy.md`；`needs_consult`/红旗/hard-list 经 `semantic_overrides` 强制协商；sc 全档恒做（pr9）。
 # 节点：实施
 
 ## ① 什么时候进入这个模式？
@@ -58,7 +59,7 @@ per-需求实施空间下，实施节点不负责创建或删除空间。dispatc
 
 1. dispatch brief 范围内的改动已完成。
 2. 所有命中的必问项已处理。
-3. 至少 1 轮协商和 1 段 4 锚点反思已记录。
+3. 协商与反思按 `collaboration.profile` 档位完成（full 全套；lite 默认关、可叫回；红旗/hard-list 经 `semantic_overrides` 强制开）。
 4. 验证命令已运行，或明确说明无法运行及原因。
 5. 回执包含 changed files、验证结果、风险和未覆盖项。
 6. 未触碰禁止范围。

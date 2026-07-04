@@ -1,0 +1,415 @@
+{
+  "schema_version": "classifier-corpus-v0.1",
+  "description": "Basic L1/L2-A/L2-B/L2-C corpus for collaboration classifier. Later L2 analyzers may reuse these cases as stable fixtures.",
+  "cases": [
+    {
+      "id": "l1_create_table_additive",
+      "description": "CREATE TABLE is additive at L1.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "new file mode 100644",
+        "index 0000000..1111111",
+        "--- /dev/null",
+        "+++ b/sql/topic.sql",
+        "@@ -0,0 +1,6 @@",
+        "+CREATE TABLE market_topic (",
+        "+  id bigint NOT NULL,",
+        "+  name varchar(64) NULL",
+        "+);"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "table", "change": "additive", "floor": "lite", "source": "l1.sql.create_table" }
+      }
+    },
+    {
+      "id": "l1_alter_add_nullable_additive",
+      "description": "ALTER ADD nullable column is additive at L1.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1,2 +1,3 @@",
+        "+ALTER TABLE market_topic ADD COLUMN display_name varchar(64) NULL;"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "table", "change": "additive", "floor": "lite", "source": "l1.sql.alter_add_nullable" }
+      }
+    },
+    {
+      "id": "l1_new_controller_additive",
+      "description": "New controller file is additive at L1.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "new file mode 100644",
+        "index 0000000..3333333",
+        "--- /dev/null",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -0,0 +1,8 @@",
+        "+public class TopicController {",
+        "+  public TopicRespVO getTopic(Long id) {",
+        "+    return null;",
+        "+  }",
+        "+}"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "api", "change": "additive", "floor": "lite", "source": "l1.path.new_controller" }
+      }
+    },
+    {
+      "id": "l1_alter_drop_breaking",
+      "description": "ALTER DROP is breaking and floors to full.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 2222222..3333333 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1 +1 @@",
+        "+ALTER TABLE market_topic DROP COLUMN display_name;"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "table", "change": "breaking", "floor": "full", "source": "l1.sql.alter_breaking" }
+      }
+    },
+    {
+      "id": "l1_api_package_breaking",
+      "description": "Any *-api path diff is treated as full-surface in L1.",
+      "diff_lines": [
+        "diff --git a/yudao-module-market-api/src/main/java/com/acme/api/PointApi.java b/yudao-module-market-api/src/main/java/com/acme/api/PointApi.java",
+        "index 1111111..2222222 100644",
+        "--- a/yudao-module-market-api/src/main/java/com/acme/api/PointApi.java",
+        "+++ b/yudao-module-market-api/src/main/java/com/acme/api/PointApi.java",
+        "@@ -1,4 +1,5 @@",
+        "+public interface PointApi {",
+        "+}"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "api", "change": "breaking", "floor": "full", "source": "l1.path.api_package" }
+      }
+    },
+    {
+      "id": "l1_existing_method_signature_breaking",
+      "description": "Existing Java method signature change is breaking and floors to full.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/TopicController.java",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -8,7 +8,7 @@ public class TopicController {",
+        "-  public TopicRespVO getTopic(Long id) {",
+        "+  public TopicRespVO getTopic(Long id, Boolean includeStats) {",
+        "     return null;",
+        "   }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "api", "change": "breaking", "floor": "full", "source": "l1.java.method_signature" }
+      }
+    },
+    {
+      "id": "l2_shadow_route_standard",
+      "description": "New Spring route overlaps an existing route pattern and must not be lite.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/TopicController.java",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -1,8 +1,13 @@",
+        " @RequestMapping(\"/market/topic\")",
+        " public class TopicController {",
+        "   @GetMapping(\"/export\")",
+        "   public TopicRespVO exportTopic() {",
+        "     return null;",
+        "   }",
+        "+  @GetMapping(\"/{id}\")",
+        "+  public TopicRespVO getById(Long id) {",
+        "+    return null;",
+        "+  }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "api", "change": "shadow_route", "floor": "standard", "source": "l2.route.shadow_route" }
+      }
+    },
+    {
+      "id": "l2_new_endpoint_additive_lite",
+      "description": "Pure new Spring endpoint in an existing controller stays additive.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/TopicController.java b/src/main/java/com/acme/controller/TopicController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/TopicController.java",
+        "+++ b/src/main/java/com/acme/controller/TopicController.java",
+        "@@ -1,8 +1,13 @@",
+        " @RequestMapping(\"/market/topic\")",
+        " public class TopicController {",
+        "   @GetMapping(\"/page\")",
+        "   public PageResult<TopicRespVO> page(TopicPageReqVO reqVO) {",
+        "     return null;",
+        "   }",
+        "+  @PostMapping(\"/create\")",
+        "+  public Long createTopic(TopicCreateReqVO reqVO) {",
+        "+    return 1L;",
+        "+  }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "api", "change": "additive", "floor": "lite", "source": "l2.route.additive_endpoint" }
+      }
+    },
+    {
+      "id": "l2_mybatis_write_statement",
+      "description": "MyBatis XML write statement touching a sink table is full risk.",
+      "diff_lines": [
+        "diff --git a/src/main/resources/mapper/PointMapper.xml b/src/main/resources/mapper/PointMapper.xml",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/resources/mapper/PointMapper.xml",
+        "+++ b/src/main/resources/mapper/PointMapper.xml",
+        "@@ -1,3 +1,5 @@",
+        "+<update id=\"addPoint\">",
+        "+  UPDATE point_account SET balance = balance + #{amount}",
+        "+</update>"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "money_sink", "change": "sink_mapper_write", "floor": "full", "source": "l2.sink.mapper_write" }
+      }
+    },
+    {
+      "id": "l2_sql_sink_table_write_full",
+      "description": "Direct SQL write to a sink table is full risk.",
+      "diff_lines": [
+        "diff --git a/sql/point-adjust.sql b/sql/point-adjust.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/point-adjust.sql",
+        "+++ b/sql/point-adjust.sql",
+        "@@ -1 +1 @@",
+        "+UPDATE point_account SET balance = balance + 10 WHERE user_id = 1001;"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "money_sink", "change": "sink_table_write", "floor": "full", "source": "l2.sink.table_write" }
+      }
+    },
+    {
+      "id": "l2_sink_service_implementation_full",
+      "description": "Changing sink service implementation is full risk.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/service/PointAccountServiceImpl.java b/src/main/java/com/acme/service/PointAccountServiceImpl.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/service/PointAccountServiceImpl.java",
+        "+++ b/src/main/java/com/acme/service/PointAccountServiceImpl.java",
+        "@@ -1,4 +1,5 @@",
+        " public class PointAccountServiceImpl implements PointAccountService {",
+        "+  public void addPoint(Long userId, Integer amount) { balanceRepository.add(userId, amount); }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "money_sink", "change": "sink_service_implementation", "floor": "full", "source": "l2.sink.service_implementation" }
+      }
+    },
+    {
+      "id": "l2_sink_api_consumer_standard",
+      "description": "Adding a normal sink API call is a standard-risk consumer touch.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/service/TaskServiceImpl.java b/src/main/java/com/acme/service/TaskServiceImpl.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/service/TaskServiceImpl.java",
+        "+++ b/src/main/java/com/acme/service/TaskServiceImpl.java",
+        "@@ -1,4 +1,5 @@",
+        " public class TaskServiceImpl {",
+        "+  public void complete(Long userId) { pointApi.addPoint(userId, 10); }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "money_sink", "change": "sink_consumer_call", "floor": "standard", "source": "l2.sink.api_consumer" }
+      }
+    },
+    {
+      "id": "l2_sink_read_call_lite",
+      "description": "Read-only sink query may remain lite when no other risk signal is present.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/service/ProfileServiceImpl.java b/src/main/java/com/acme/service/ProfileServiceImpl.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/service/ProfileServiceImpl.java",
+        "+++ b/src/main/java/com/acme/service/ProfileServiceImpl.java",
+        "@@ -1,4 +1,5 @@",
+        " public class ProfileServiceImpl {",
+        "+  public WalletRespVO show(Long userId) { return walletApi.getWallet(userId); }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "lite",
+        "surface": { "type": "money_sink", "change": "sink_read_call", "floor": "lite", "source": "l2.sink.read_call" }
+      }
+    },
+    {
+      "id": "l2_mq_indirect_money_standard",
+      "description": "MQ/event publish to a sink topic is an indirect money touch and must not be lite.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/service/RewardPublisher.java b/src/main/java/com/acme/service/RewardPublisher.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/service/RewardPublisher.java",
+        "+++ b/src/main/java/com/acme/service/RewardPublisher.java",
+        "@@ -1,4 +1,5 @@",
+        " public class RewardPublisher {",
+        "+  public void publish(Long userId, Integer amount) { rocketMQTemplate.convertAndSend(\"point.adjust\", new PointAdjustEvent(userId, amount)); }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "money_sink", "change": "sink_event_topic", "floor": "standard", "source": "l2.sink.event_topic" }
+      }
+    },
+    {
+      "id": "l2_reflection_unresolved_sink_standard",
+      "description": "Reflection/dynamic invocation near a sink is unresolved and floors to standard.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/util/PointReflectionInvoker.java b/src/main/java/com/acme/util/PointReflectionInvoker.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/util/PointReflectionInvoker.java",
+        "+++ b/src/main/java/com/acme/util/PointReflectionInvoker.java",
+        "@@ -1,4 +1,5 @@",
+        " public class PointReflectionInvoker {",
+        "+  public void run(Object target, Long userId) { Class.forName(\"com.acme.PointAccountService\").getMethod(\"addPoint\", Long.class).invoke(target, userId); }",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "partial",
+        "minimum_tier": "standard",
+        "partial_surface": "unresolved_sink_call_chain"
+      }
+    },
+    {
+      "id": "l2_sensitive_money_config_standard",
+      "description": "Money threshold config change is classified and must not be lite.",
+      "diff_lines": [
+        "diff --git a/config/application.yaml b/config/application.yaml",
+        "index 1111111..2222222 100644",
+        "--- a/config/application.yaml",
+        "+++ b/config/application.yaml",
+        "@@ -1 +1 @@",
+        "+point.reward.amount-threshold: 1000"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "money_sink", "change": "sensitive_money_config", "floor": "standard", "source": "l2.config.sensitive_money" }
+      }
+    },
+    {
+      "id": "l2_auth_annotation_full",
+      "description": "Permission/auth model annotation changes are semantic and must not be lite.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/controller/AdminController.java b/src/main/java/com/acme/controller/AdminController.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/controller/AdminController.java",
+        "+++ b/src/main/java/com/acme/controller/AdminController.java",
+        "@@ -1,4 +1,5 @@",
+        " public class AdminController {",
+        "+  @PermitAll",
+        "+  public void exportSettlement() {}",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "permission_scope", "change": "auth_model_change", "floor": "full", "source": "l2.auth.model_change" }
+      }
+    },
+    {
+      "id": "l2_enum_state_machine_standard",
+      "description": "Enum/status/state-machine changes are semantic and must not be silently lite.",
+      "diff_lines": [
+        "diff --git a/src/main/java/com/acme/enums/MarketStatusEnum.java b/src/main/java/com/acme/enums/MarketStatusEnum.java",
+        "index 1111111..2222222 100644",
+        "--- a/src/main/java/com/acme/enums/MarketStatusEnum.java",
+        "+++ b/src/main/java/com/acme/enums/MarketStatusEnum.java",
+        "@@ -1,4 +1,5 @@",
+        " public enum MarketStatusEnum {",
+        "+  SETTLEMENT_LOCKED,",
+        "   CLOSED",
+        " }"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "state_machine", "change": "enum_state_machine", "floor": "standard", "source": "l2.enum_state_machine" }
+      }
+    },
+    {
+      "id": "l2_alter_add_not_null_default_standard",
+      "description": "ALTER ADD NOT NULL DEFAULT is classified by SQL AST and must not be lite.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1 +1 @@",
+        "+ALTER TABLE market_topic ADD COLUMN status tinyint NOT NULL DEFAULT 0;"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "table", "change": "schema_semantic", "floor": "standard", "source": "l2.sql.add_not_null_default" }
+      }
+    },
+    {
+      "id": "l2_create_unique_index_standard",
+      "description": "New UNIQUE index is classified by SQL AST and must not be lite.",
+      "diff_lines": [
+        "diff --git a/sql/topic.sql b/sql/topic.sql",
+        "index 1111111..2222222 100644",
+        "--- a/sql/topic.sql",
+        "+++ b/sql/topic.sql",
+        "@@ -1 +1 @@",
+        "+CREATE UNIQUE INDEX uk_market_topic_code ON market_topic (code);"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "standard",
+        "surface": { "type": "table", "change": "constraint", "floor": "standard", "source": "l2.sql.create_unique_index" }
+      }
+    },
+    {
+      "id": "l2_sql_backfill_full",
+      "description": "SQL data backfill is full risk.",
+      "diff_lines": [
+        "diff --git a/sql/backfill-topic.sql b/sql/backfill-topic.sql",
+        "new file mode 100644",
+        "--- /dev/null",
+        "+++ b/sql/backfill-topic.sql",
+        "@@ -0,0 +1,2 @@",
+        "+-- backfill existing rows; no rollback",
+        "+UPDATE market_topic SET status = 0 WHERE status IS NULL;"
+      ],
+      "expected": {
+        "classifier_coverage": "full",
+        "minimum_tier": "full",
+        "surface": { "type": "table", "change": "data_migration", "floor": "full", "source": "l2.sql.backfill" }
+      }
+    }
+  ]
+}

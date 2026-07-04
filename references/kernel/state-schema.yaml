@@ -100,6 +100,56 @@ enums:
       - deferred
       - cancelled
 
+  collaboration_ceremony_tier:
+    description: collaboration.profile 输出的仪式基线档；产物/验证/留痕下限不得因 lite 归零。
+    values:
+      - full
+      - standard
+      - lite
+
+  collaboration_classifier_coverage:
+    description: classifier 对当前 diff 语义面的覆盖度；partial 表示未知面从严，不得降为 lite。
+    values:
+      - full
+      - partial
+
+  collaboration_profile_pass:
+    description: collaboration.profile 判定轮次；planned 驱动执行前仪式，actual 在 review 用实际 diff 覆核。
+    values:
+      - planned
+      - actual
+
+  collaboration_semantic_override_type:
+    description: 语义覆盖类型；只升不降，避免低档标签绕过 consult/red-flag/hard-list。
+    values:
+      - consult_only
+      - consult_plus_decision_record
+      - tier_floor
+
+  collaboration_verification_minimum:
+    description: 验证下限；随风险伸缩但不得归零，跳过必须进入 waivers。
+    values:
+      - static
+      - targeted
+      - targeted_plus_edge
+      - integration
+      - full
+
+  risk_envelope_surface_type:
+    description: 跨节点 carry-forward 的高风险面类型，不能用裸 tier 代替。
+    values:
+      - table
+      - api
+      - money_sink
+      - permission_scope
+
+  risk_envelope_status:
+    description: 风险面关闭状态；未 closed 的 surface 会参与下游 effective tier floor。
+    values:
+      - open
+      - partially_closed
+      - closed
+
 # -----------------------------------------------------------------------------
 # 2. dev_task schema
 # -----------------------------------------------------------------------------
@@ -336,6 +386,81 @@ dev_task:
           type: bool
           formula: multi_options != null && option_count != null && needs_consult != null && needs_user_decision != null
           description: decision_shape 所有必填字段已被填写；inv_classification_required_before_dispatch 使用
+
+    collaboration_profile:
+      type: object
+      required: false
+      writer: collaboration.profile capability / node engine
+      description: |
+        按风险分级解析器输出。该字段不是裸 tier：它同时承载仪式档、
+        产物下限、验证下限、负证据、豁免与证据引用，供后续节点和审计复核。
+      schema:
+        ceremony_tier: enum.collaboration_ceremony_tier
+        classifier_coverage: enum.collaboration_classifier_coverage
+        pass: enum.collaboration_profile_pass
+        consult_required: bool
+        semantic_overrides:
+          type: array<object>
+          schema_per_item:
+            trigger: string
+            type: enum.collaboration_semantic_override_type
+            reason: string
+        artifact_minima:
+          type: object
+          description: |
+            各产物类型的最低留痕/表达要求。具体矩阵由 traceability-policy 定义；
+            此处固定字段形状，防止 lite 静默砍掉产物。
+          schema:
+            requirement: string
+            technical_design: string
+            dev_task: string
+            review: string
+            archive: string
+        verification_minimum: enum.collaboration_verification_minimum
+        risk_basis: string
+        negative_evidence: array<string>
+        waivers:
+          type: array<object>
+          schema_per_item:
+            action_or_artifact: string
+            reason: string
+        evidence_refs: array<string>
+
+    risk_envelope:
+      type: array<object>
+      required: false
+      default: []
+      writer: collaboration.profile capability / node engine
+      append_or_close_only: true
+      description: |
+        跨节点传递的未解除高风险面集合。下游 effective tier 必须取本节点判档与
+        任一未关闭 surface floor 的 max；下游变轻必须按 surface 类型提供 close_evidence。
+      schema_per_item:
+        surface_ref:
+          type: object
+          schema:
+            type: enum.risk_envelope_surface_type
+            id: string
+        opened_by: string
+        status: enum.risk_envelope_status
+        close_evidence:
+          type: object
+          description: |
+            按 surface_ref.type 选择对应证据集合：
+            - table: migration_verified_ref + rollback_or_compat_ref
+            - api: contract_test_ref + backward_compat_ref
+            - money_sink: invariant_ref + idempotency_ref + reconciliation_ref
+            - permission_scope: authz_matrix_ref + privilege_negative_test_ref
+          schema:
+            migration_verified_ref: string
+            rollback_or_compat_ref: string
+            contract_test_ref: string
+            backward_compat_ref: string
+            invariant_ref: string
+            idempotency_ref: string
+            reconciliation_ref: string
+            authz_matrix_ref: string
+            privilege_negative_test_ref: string
 
     # --- 治理记录 ---
     consult_records:
@@ -783,6 +908,17 @@ evolution:
     - current_node owns flow position
     - runtime_state + node_substate + batch_state.active_waiting_set own waiting/escalation/replan state
 
+  v052_added:
+    - enums.collaboration_ceremony_tier
+    - enums.collaboration_classifier_coverage
+    - enums.collaboration_profile_pass
+    - enums.collaboration_semantic_override_type
+    - enums.collaboration_verification_minimum
+    - enums.risk_envelope_surface_type
+    - enums.risk_envelope_status
+    - dev_task.collaboration_profile
+    - dev_task.risk_envelope
+
   compatibility_kept:
     - dev_task.waiting_state # 与 runtime_state 并存
     - dev_task.phase_projection # server-side 派生兼容投影
@@ -816,6 +952,8 @@ artifact_namespaces:
       - task.approval_records
       - task.decision_refs
       - task.engineering_decidable_decisions
+      - task.collaboration_profile
+      - task.risk_envelope
       - task.review_status
       - task.verification_result
       - task.requirement_id
@@ -921,6 +1059,7 @@ write_authority:
       - escalate_to_human        # 写 runtime_state
       - replan_from_review       # 写 rollback_origin / node_substate
       - task_breakdown_materialize # 写 requirement_id / section_id / order / implementation_owner
+      - collaboration.profile    # 写 collaboration_profile / risk_envelope
 
     scheduler_can_write:
       - current_node             # 节点转移
